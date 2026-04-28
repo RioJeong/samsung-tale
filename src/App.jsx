@@ -690,7 +690,7 @@ export default function App() {
         {isGenerating && (
           <div className="loading-overlay">
             <div className="spinner"></div>
-            <p>Gemini가 이야기를 만들고 있어요...</p>
+            <p>Gemini가 줄거리를 만들고 있어요...</p>
           </div>
         )}
         {screen === "opening" && (
