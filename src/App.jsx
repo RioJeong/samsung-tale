@@ -10,27 +10,81 @@ import {
   Check,
   ChevronRight,
   House,
+  Lock,
   RefreshCw,
   Sparkles
 } from "lucide-react";
 import storyScene1 from "./assets/story/scene_1.png";
+import storyScene2 from "./assets/story/scene_2.png";
+import storyScene3 from "./assets/story/scene_3.png";
+import storyScene4 from "./assets/story/scene_4.png";
 import storyVideo0 from "./assets/story/video_0.mp4";
 import storyVideo1 from "./assets/story/video_1.mp4";
+import storyVideo2 from "./assets/story/video_2.mp4";
+import storyVideo3 from "./assets/story/video_3.mp4";
+import storyVideo4 from "./assets/story/video_4.mp4";
+import luluThumb from "./assets/characters/ruru.png";
+import mioThumb from "./assets/characters/mio.png";
+import rumiThumb from "./assets/characters/rumi.png";
+import yoshiThumb from "./assets/characters/yoshi.png";
 
-const sectionOrder = ["voice", "character", "story"];
+const carrotSceneAssets = [storyScene1, storyScene2, storyScene3, storyScene4];
+const carrotVideoAssets = [storyVideo1, storyVideo2, storyVideo3, storyVideo4];
+
+const sectionOrder = ["character", "story"];
 const storyFieldOrder = ["background", "moral", "length"];
 
-const voices = [
-  { id: "mom", label: "따뜻한 엄마 목소리", desc: "부드럽고 안정적인 읽기 톤" },
-  { id: "friend", label: "밝은 친구 목소리", desc: "경쾌하고 반응이 빠른 톤" },
-  { id: "narrator", label: "차분한 내레이터", desc: "발음이 또렷한 설명형 톤" },
-  { id: "grandpa", label: "할아버지 이야기꾼", desc: "느긋하고 포근한 고전 톤" }
-];
-
 const characters = [
-  { id: "lulu", label: "토끼 루루", trait: "호기심 많고 빠른 주인공", avatar: "루" },
-  { id: "popo", label: "꼬마 용 포포", trait: "겁은 많지만 따뜻한 친구", avatar: "포" },
-  { id: "mio", label: "우주 고양이 미오", trait: "상상력이 풍부한 탐험가", avatar: "미" }
+  {
+    id: "lulu",
+    label: "토끼 루루",
+    initial: "루",
+    tagline: "호기심 많고 빠른 주인공",
+    description:
+      "당근밭 너머 세상이 궁금한 어린 토끼. 작은 발자국으로 큰 모험을 만듭니다.",
+    tags: ["호기심", "빠름", "친구사랑"],
+    thumbnail: luluThumb,
+    accent: "#ffb3c1",
+    locked: false
+  },
+  {
+    id: "mio",
+    label: "우주 고양이 미오",
+    initial: "미",
+    tagline: "상상력이 풍부한 탐험가",
+    description:
+      "별과 별 사이를 떠다니며 새로운 이야기를 모으는 호기심 가득한 우주 여행자.",
+    tags: ["상상력", "차분함", "탐험"],
+    thumbnail: mioThumb,
+    accent: "#a0c4ff",
+    locked: false
+  },
+  {
+    id: "rumi",
+    label: "케이팝 스타, 루미",
+    initial: "루",
+    tagline: "무대 위에서는 화려한 퍼포머, 밤에는 악마를 쫓는 빛의 수호자.",
+    description:
+      "전 세계를 열광시키는 아이돌이지만, 사실은 리듬을 마력으로 변환해 악마를 퇴치하는 비밀스러운 데몬 헌터입니다. 마이크 대신 빛의 검을 휘두르며 오늘도 무대와 밤의 어둠 사이에서 균형을 지킵니다.",
+    tags: ["열정적", "당당함", "비밀스러운"],
+    thumbnail: rumiThumb,
+    accent: "#ff5d8f",
+    locked: true,
+    premium: true
+  },
+  {
+    id: "yoshi",
+    label: "요시",
+    initial: "요",
+    tagline: "버섯 왕국의 든든한 동료",
+    description:
+      "긴 혀와 따뜻한 마음으로 어떤 모험에서도 친구를 지켜주는 초록빛 공룡 친구.",
+    tags: ["용감함", "든든함", "스페셜"],
+    thumbnail: yoshiThumb,
+    accent: "#7ed957",
+    locked: true,
+    premium: true
+  }
 ];
 
 const backgrounds = [
@@ -64,10 +118,9 @@ const libraryStories = [
     title: "흥부 놀부",
     progress: "75%",
     background: "ocean",
-    character: "popo",
+    character: "lulu",
     moral: "promise",
     length: "p4",
-    voice: "narrator",
     image: hbnb
   },
   {
@@ -78,7 +131,6 @@ const libraryStories = [
     character: "mio",
     moral: "respect",
     length: "p8",
-    voice: "friend",
     image: spaceCat
   }
 ];
@@ -99,7 +151,6 @@ const fieldLabel = {
 };
 
 const initialSelection = {
-  voice: "mom",
   character: "lulu",
   background: "forest",
   moral: "res",
@@ -122,7 +173,6 @@ function buildPlot(selection) {
   const character = pickLabel(characters, selection.character);
   const background = pickLabel(backgrounds, selection.background);
   const moral = pickLabel(morals, selection.moral);
-  const voice = pickLabel(voices, selection.voice);
   const length = pickLabel(lengths, selection.length);
   const endings = [
     "마지막 장면에서 모두가 하늘을 올려다보며 미소를 나눕니다.",
@@ -130,10 +180,18 @@ function buildPlot(selection) {
     "끝에서는 친구들이 서로의 다름을 응원하며 손을 맞잡습니다."
   ];
   const ending = endings[Math.floor(Math.random() * endings.length)];
-  return `${character}는 ${background}에서 신비한 신호를 발견하고 ${moral}를 배우는 모험을 시작해요. ${voice}로 이야기가 진행되고, ${length} 구성으로 장면이 차분하게 확장됩니다. ${ending}`;
+  return `${character}는 ${background}에서 신비한 신호를 발견하고 ${moral}를 배우는 모험을 시작해요. ${length} 구성으로 장면이 차분하게 확장됩니다. ${ending}`;
 }
 
 function buildLines(selection) {
+  if (selection?.id === "s1" || selection?.title === "꼬마토끼의 반쪽당근") {
+    return [
+      '커다란 당근을 든 토끼가 배고파서 "엉엉" 울고 있는 곰을 만났어요.',
+      '토끼는 당근을 "똑!" 나눠 곰에게 주었지요.',
+      '둘은 나란히 앉아 "아삭아삭" 맛있게 먹었어요.',
+      "함께 나눠 먹으니 훨씬 더 달콤했답니다."
+    ];
+  }
   return [
     "꼬마토끼가 주황색 당근을 가지고 걸어가다 엉엉 울고 있는 곰을 만났어요."
   ];
@@ -161,8 +219,11 @@ export default function App() {
   const [landingZone, setLandingZone] = useState("actions");
   const [libraryFocus, setLibraryFocus] = useState(0);
   const [libraryZone, setLibraryZone] = useState("cards");
-  const [section, setSection] = useState("voice");
+  const [section, setSection] = useState("character");
   const [storyField, setStoryField] = useState("background");
+  const [focusedCharacter, setFocusedCharacter] = useState(initialSelection.character);
+  const [characterFocusZone, setCharacterFocusZone] = useState("grid");
+  const [lockNoticeShake, setLockNoticeShake] = useState(0);
   const [confirmFocus, setConfirmFocus] = useState("ok");
   const [selection, setSelection] = useState(initialSelection);
   const [generatedPlot, setGeneratedPlot] = useState(buildPlot(initialSelection));
@@ -171,7 +232,10 @@ export default function App() {
   const openingVideoRef = useRef(null);
   const openingPlaybackRef = useRef(null);
   const nextButtonRef = useRef(null);
+  const nextActionLockRef = useRef(false);
+  const nextActionLockTimerRef = useRef(null);
   const [playback, setPlayback] = useState({
+    storyId: "generated",
     title: makeTitle(initialSelection),
     background: initialSelection.background,
     character: initialSelection.character,
@@ -181,12 +245,12 @@ export default function App() {
     subtitleEnabled: false,
     subtitleWordIndex: -1,
     videoStarted: false,
+    videoReady: false,
     videoEnded: false
   });
 
   const summary = useMemo(
     () => [
-      `보이스: ${pickLabel(voices, selection.voice)}`,
       `캐릭터: ${pickLabel(characters, selection.character)}`,
       `배경: ${pickLabel(backgrounds, selection.background)}`,
       `교훈: ${pickLabel(morals, selection.moral)}`,
@@ -195,17 +259,26 @@ export default function App() {
     [selection]
   );
 
+  const focusedChar =
+    characters.find((char) => char.id === focusedCharacter) || characters[0];
+
   const progressPercent =
     playback.lines.length > 0
       ? ((playback.lineIndex + 1) / playback.lines.length) * 100
       : 0;
 
   const currentLine = playback.lines[playback.lineIndex] || "";
-  const nextLine = playback.lines[playback.lineIndex + 1] || "";
   const currentWords = currentLine.split(" ").filter(Boolean);
-  const showSubtitleScene = !playback.videoStarted;
+  const showSubtitleScene = !playback.videoStarted || !playback.videoReady;
   const showVideoScene = playback.videoStarted;
-  const isCarrotStoryTitle = playback.title === "꼬마토끼의 반쪽당근";
+  const isCarrotStoryTitle = playback.storyId === "s1";
+  const currentSceneIndex = Math.min(playback.lineIndex, carrotSceneAssets.length - 1);
+  const currentSceneAsset = isCarrotStoryTitle
+    ? carrotSceneAssets[currentSceneIndex]
+    : storyScene1;
+  const currentVideoAsset = isCarrotStoryTitle
+    ? carrotVideoAssets[Math.min(playback.lineIndex, carrotVideoAssets.length - 1)]
+    : storyVideo1;
   const highlightedWordIndex = playback.subtitleEnabled
     ? Math.min(playback.subtitleWordIndex, currentWords.length - 1)
     : -1;
@@ -262,8 +335,39 @@ export default function App() {
   }
 
   function openCreate() {
-    setSection("voice");
+    setSection("character");
+    setFocusedCharacter(selection.character);
+    setCharacterFocusZone("grid");
     navigateTo("create");
+  }
+
+  function pickCharacter(char) {
+    if (char.locked) {
+      setFocusedCharacter(char.id);
+      setLockNoticeShake((v) => v + 1);
+      return;
+    }
+    setFocusedCharacter(char.id);
+    setSelection((prev) => ({ ...prev, character: char.id }));
+  }
+
+  function moveCharacterFocus(direction) {
+    const cols = 4;
+    const idx = characters.findIndex((c) => c.id === focusedCharacter);
+    const safeIdx = idx === -1 ? 0 : idx;
+    const row = Math.floor(safeIdx / cols);
+    const col = safeIdx % cols;
+    const lastRow = Math.floor((characters.length - 1) / cols);
+
+    let nextRow = row;
+    let nextCol = col;
+    if (direction === "left") nextCol = Math.max(0, col - 1);
+    else if (direction === "right") nextCol = Math.min(cols - 1, col + 1);
+    else if (direction === "up") nextRow = Math.max(0, row - 1);
+    else if (direction === "down") nextRow = Math.min(lastRow, row + 1);
+
+    const nextIdx = Math.min(characters.length - 1, nextRow * cols + nextCol);
+    setFocusedCharacter(characters[nextIdx].id);
   }
 
   function setNextSection() {
@@ -285,11 +389,37 @@ export default function App() {
 
   function triggerPlayerSpaceAction() {
     setPlayback((prev) => {
+      const words = (prev.lines[prev.lineIndex] || "").split(" ").filter(Boolean);
+      const lastWordIndex = words.length - 1;
+
       if (isCarrotStoryTitle) {
-        if (!prev.videoStarted) {
-          return { ...prev, videoStarted: true, playing: true, videoEnded: false };
+        if (prev.videoStarted) {
+          if (prev.videoEnded) {
+            return prev;
+          }
+          return { ...prev, playing: !prev.playing };
         }
-        return { ...prev, playing: !prev.playing };
+        if (!prev.subtitleEnabled) {
+          return {
+            ...prev,
+            subtitleEnabled: true,
+            subtitleWordIndex: 0,
+            videoStarted: false,
+            videoReady: false,
+            playing: false,
+            videoEnded: false
+          };
+        }
+        if (prev.subtitleWordIndex < lastWordIndex) {
+          return { ...prev, subtitleWordIndex: prev.subtitleWordIndex + 1 };
+        }
+        return {
+          ...prev,
+          videoStarted: true,
+          videoReady: false,
+          playing: true,
+          videoEnded: false
+        };
       }
       if (!prev.subtitleEnabled) {
         return {
@@ -297,15 +427,65 @@ export default function App() {
           subtitleEnabled: true,
           subtitleWordIndex: 0,
           videoStarted: false,
+          videoReady: false,
           playing: false,
           videoEnded: false
         };
       }
+      if (prev.subtitleWordIndex < lastWordIndex) {
+        return { ...prev, subtitleWordIndex: prev.subtitleWordIndex + 1 };
+      }
       if (!prev.videoStarted) {
-        return { ...prev, videoStarted: true, playing: true, videoEnded: false };
+        return {
+          ...prev,
+          videoStarted: true,
+          videoReady: false,
+          playing: true,
+          videoEnded: false
+        };
       }
       return { ...prev, playing: !prev.playing };
     });
+  }
+
+  function moveToNextCarrotStep() {
+    if (!playback.videoEnded) {
+      return;
+    }
+    if (playback.lineIndex >= playback.lines.length - 1) {
+      openLanding();
+      return;
+    }
+    setPlayback((prev) => ({
+      ...prev,
+      lineIndex: prev.lineIndex + 1,
+      playing: false,
+      subtitleEnabled: false,
+      subtitleWordIndex: -1,
+      videoStarted: false,
+      videoReady: false,
+      videoEnded: false
+    }));
+  }
+
+  function handlePlayerNext() {
+    if (nextActionLockRef.current) {
+      return;
+    }
+    nextActionLockRef.current = true;
+    if (nextActionLockTimerRef.current) {
+      window.clearTimeout(nextActionLockTimerRef.current);
+    }
+    nextActionLockTimerRef.current = window.setTimeout(() => {
+      nextActionLockRef.current = false;
+      nextActionLockTimerRef.current = null;
+    }, 220);
+
+    if (playback.storyId === "s1") {
+      moveToNextCarrotStep();
+      return;
+    }
+    openLanding();
   }
 
   function startPlayerFromSelection() {
@@ -319,6 +499,7 @@ export default function App() {
   function proceedToPlayer() {
     setShowFinalConfirm(false);
     setPlayback({
+      storyId: "generated",
       title: makeTitle(selection),
       background: selection.background,
       character: selection.character,
@@ -328,6 +509,7 @@ export default function App() {
       subtitleEnabled: false,
       subtitleWordIndex: -1,
       videoStarted: false,
+      videoReady: false,
       videoEnded: false
     });
     navigateTo("player");
@@ -336,6 +518,7 @@ export default function App() {
   function startPlayerFromLibrary(index) {
     const story = libraryStories[index];
     const storyPlayback = {
+      storyId: story.id,
       title: story.title,
       background: story.background,
       character: story.character,
@@ -345,6 +528,7 @@ export default function App() {
       subtitleEnabled: false,
       subtitleWordIndex: -1,
       videoStarted: false,
+      videoReady: false,
       videoEnded: false
     };
 
@@ -499,31 +683,62 @@ export default function App() {
           }
           handled = true;
         } else if (key === "ArrowLeft") {
-          if (section === "story" && storyFieldIndex > 0) {
+          if (section === "character") {
+            if (characterFocusZone === "grid") {
+              moveCharacterFocus("left");
+            }
+          } else if (section === "story" && storyFieldIndex > 0) {
             setStoryField(storyFieldOrder[storyFieldIndex - 1]);
           } else if (sectionIndex > 0) {
             setSection(sectionOrder[sectionIndex - 1]);
           }
           handled = true;
         } else if (key === "ArrowRight") {
-          if (section === "story" && storyFieldIndex < storyFieldOrder.length - 1) {
+          if (section === "character") {
+            if (characterFocusZone === "grid") {
+              moveCharacterFocus("right");
+            }
+          } else if (section === "story" && storyFieldIndex < storyFieldOrder.length - 1) {
             setStoryField(storyFieldOrder[storyFieldIndex + 1]);
           } else if (sectionIndex < sectionOrder.length - 1) {
             setSection(sectionOrder[sectionIndex + 1]);
           }
           handled = true;
         } else if (key === "ArrowUp" || key === "ArrowDown") {
-          const direction = key === "ArrowDown" ? 1 : -1;
-          if (section === "voice") {
-            cycleSelection("voice", voices, direction);
-          } else if (section === "character") {
-            cycleSelection("character", characters, direction);
+          if (section === "character") {
+            if (key === "ArrowDown") {
+              if (characterFocusZone === "grid") {
+                const cols = 4;
+                const idx = characters.findIndex((c) => c.id === focusedCharacter);
+                const safeIdx = idx === -1 ? 0 : idx;
+                const row = Math.floor(safeIdx / cols);
+                const lastRow = Math.floor((characters.length - 1) / cols);
+                if (row === lastRow) {
+                  setCharacterFocusZone("footer");
+                } else {
+                  moveCharacterFocus("down");
+                }
+              }
+            } else {
+              if (characterFocusZone === "footer") {
+                setCharacterFocusZone("grid");
+              } else {
+                moveCharacterFocus("up");
+              }
+            }
           } else {
+            const direction = key === "ArrowDown" ? 1 : -1;
             cycleSelection(storyField, storyOptions[storyField], direction);
           }
           handled = true;
         } else if (key === "Enter") {
-          if (section === "story") {
+          if (section === "character") {
+            if (characterFocusZone === "footer") {
+              setNextSection();
+            } else {
+              pickCharacter(focusedChar);
+            }
+          } else if (section === "story") {
             generatePreview();
           } else {
             setNextSection();
@@ -563,13 +778,20 @@ export default function App() {
           handled = true;
         }
       } else if (screen === "player") {
-        if (playback.videoEnded && key === "Enter") {
-          openLanding();
+        if ((key === " " || key === "Enter") && event.repeat) {
+          handled = true;
+        } else if (playback.videoEnded && (key === "Enter" || key === " ")) {
+          handlePlayerNext();
           handled = true;
         } else if (key === " " || key === "Enter") {
           triggerPlayerSpaceAction();
           handled = true;
         } else if (key === "ArrowLeft") {
+          if (playback.storyId === "s1") {
+            handled = true;
+            event.preventDefault();
+            return;
+          }
           setPlayback((prev) => ({
             ...prev,
             lineIndex: Math.max(0, prev.lineIndex - 1),
@@ -577,6 +799,11 @@ export default function App() {
           }));
           handled = true;
         } else if (key === "ArrowRight") {
+          if (playback.storyId === "s1") {
+            handled = true;
+            event.preventDefault();
+            return;
+          }
           setPlayback((prev) => ({
             ...prev,
             lineIndex: Math.min(prev.lines.length - 1, prev.lineIndex + 1),
@@ -601,7 +828,9 @@ export default function App() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
+    characterFocusZone,
     confirmFocus,
+    focusedCharacter,
     landingActions,
     landingActionFocus,
     landingStoryFocus,
@@ -629,24 +858,6 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
-    if (screen !== "player" || !playback.subtitleEnabled || playback.videoStarted) {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      setPlayback((prev) => {
-        const words = (prev.lines[prev.lineIndex] || "").split(" ").filter(Boolean);
-        if (words.length === 0 || prev.subtitleWordIndex >= words.length - 1) {
-          return prev;
-        }
-        return { ...prev, subtitleWordIndex: prev.subtitleWordIndex + 1 };
-      });
-    }, 340);
-
-    return () => window.clearInterval(timer);
-  }, [playback.subtitleEnabled, playback.videoStarted, screen]);
-
-  useEffect(() => {
     if (screen !== "player") {
       return;
     }
@@ -669,6 +880,14 @@ export default function App() {
     }
     nextButtonRef.current?.focus();
   }, [playback.videoEnded, screen]);
+
+  useEffect(() => {
+    return () => {
+      if (nextActionLockTimerRef.current) {
+        window.clearTimeout(nextActionLockTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className={`app screen-${screen}`}>
@@ -895,13 +1114,6 @@ export default function App() {
               <div className="create-tabs">
                 <button
                   type="button"
-                  className={section === "voice" ? "active" : ""}
-                  onClick={() => setSection("voice")}
-                >
-                  보이스
-                </button>
-                <button
-                  type="button"
                   className={section === "character" ? "active" : ""}
                   onClick={() => setSection("character")}
                 >
@@ -919,45 +1131,85 @@ export default function App() {
 
             <div className="create-body">
               <section className="option-area">
-                {section === "voice" && (
-                  <div className="option-list">
-                    {voices.map((voice) => (
-                      <button
-                        key={voice.id}
-                        type="button"
-                        className={selection.voice === voice.id ? "selected" : ""}
-                        onClick={() =>
-                          setSelection((prev) => ({ ...prev, voice: voice.id }))
-                        }
-                      >
-                        <strong>{voice.label}</strong>
-                        <small>{voice.desc}</small>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
                 {section === "character" && (
-                  <div className="character-list">
-                    {characters.map((character) => (
-                      <button
-                        key={character.id}
-                        type="button"
-                        className={selection.character === character.id ? "selected" : ""}
-                        onClick={() =>
-                          setSelection((prev) => ({
-                            ...prev,
-                            character: character.id
-                          }))
-                        }
-                      >
-                        <div className="avatar">{character.avatar}</div>
-                        <div className="character-copy">
-                          <strong>{character.label}</strong>
-                          <small>{character.trait}</small>
+                  <div className="character-screen">
+                    <div className="character-grid">
+                      {characters.map((character) => {
+                        const isSelected = selection.character === character.id;
+                        const isFocused = focusedCharacter === character.id;
+                        const classes = [
+                          "character-card",
+                          isSelected ? "selected" : "",
+                          isFocused ? "focused" : "",
+                          character.locked ? "locked" : ""
+                        ]
+                          .filter(Boolean)
+                          .join(" ");
+                        return (
+                          <button
+                            key={character.id}
+                            type="button"
+                            className={classes}
+                            style={{ "--accent": character.accent }}
+                            onMouseEnter={() => {
+                              setFocusedCharacter(character.id);
+                              setCharacterFocusZone("grid");
+                            }}
+                            onFocus={() => {
+                              setFocusedCharacter(character.id);
+                              setCharacterFocusZone("grid");
+                            }}
+                            onClick={() => pickCharacter(character)}
+                          >
+                            {character.locked && (
+                              <span className="lock-badge">
+                                <Lock size={12} />
+                                <span>PRO</span>
+                              </span>
+                            )}
+                            {character.thumbnail ? (
+                              <img
+                                className="character-thumb"
+                                src={character.thumbnail}
+                                alt={character.label}
+                              />
+                            ) : (
+                              <div
+                                className="character-thumb fallback"
+                                style={{
+                                  background: `linear-gradient(135deg, ${character.accent}, #ffffff)`
+                                }}
+                              >
+                                {character.initial}
+                              </div>
+                            )}
+                            <span className="character-card-name">{character.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <aside className="character-detail">
+                      {focusedChar.locked && (
+                        <div
+                          key={lockNoticeShake}
+                          className="lock-banner"
+                        >
+                          <Lock size={14} />
+                          <span>프리미엄 캐릭터입니다 — 곧 만나요!</span>
                         </div>
-                      </button>
-                    ))}
+                      )}
+                      <h3 className="character-detail-name">{focusedChar.label}</h3>
+                      <p className="character-detail-tagline">"{focusedChar.tagline}"</p>
+                      <div className="character-tags">
+                        {focusedChar.tags.map((tag) => (
+                          <span key={tag} className="tag-chip">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="character-detail-desc">{focusedChar.description}</p>
+                    </aside>
                   </div>
                 )}
 
@@ -1013,7 +1265,16 @@ export default function App() {
 
             <div className="create-foot">
               {section !== "story" ? (
-                <button className="primary-btn" type="button" onClick={setNextSection}>
+                <button
+                  className={`primary-btn ${
+                    section === "character" && characterFocusZone === "footer" ? "focused" : ""
+                  }`}
+                  type="button"
+                  onMouseEnter={() => {
+                    if (section === "character") setCharacterFocusZone("footer");
+                  }}
+                  onClick={setNextSection}
+                >
                   <span>다음 단계</span>
                   <ChevronRight size={18} />
                 </button>
@@ -1064,15 +1325,36 @@ export default function App() {
                 : `cover-${playback.background}`
             }`}
           >
-            {showSubtitleScene && (
-              <img className="player-scene-image" src={storyScene1} alt="" />
-            )}
+            {(showSubtitleScene || showVideoScene) &&
+              (isCarrotStoryTitle ? (
+                <div className="player-scene-stack" aria-hidden="true">
+                  {carrotSceneAssets.map((src, index) => (
+                    <img
+                      key={`carrot-scene-${index}`}
+                      className={`player-scene-image ${
+                        index === currentSceneIndex ? "active-scene" : ""
+                      }`}
+                      src={src}
+                      alt=""
+                    />
+                  ))}
+                </div>
+              ) : (
+                <img className="player-scene-image active-scene" src={currentSceneAsset} alt="" />
+              ))}
             {showVideoScene && (
               <video
+                key={`story-video-${playback.storyId}-${playback.lineIndex}`}
                 ref={videoRef}
-                className="player-video"
-                src={storyVideo1}
+                className={`player-video ${playback.videoReady ? "ready" : ""}`}
+                src={currentVideoAsset}
                 playsInline
+                preload="auto"
+                onLoadedData={() => {
+                  setPlayback((prev) =>
+                    prev.videoStarted ? { ...prev, videoReady: true } : prev
+                  );
+                }}
                 onEnded={() => {
                   setPlayback((prev) => ({ ...prev, playing: false, videoEnded: true }));
                 }}
@@ -1098,9 +1380,6 @@ export default function App() {
                     playback.title
                   )}
                 </strong>
-                <span>
-                  {playback.lineIndex + 1} / {playback.lines.length}
-                </span>
               </div>
               <div className="caption-box">
                 <p className="caption-current">
@@ -1116,12 +1395,12 @@ export default function App() {
                     </span>
                   ))}
                 </p>
-                {nextLine && <p className="caption-next">{nextLine}</p>}
                 <button
                   ref={nextButtonRef}
                   className={`dialog-next-btn ${playback.videoEnded ? "focused" : ""}`}
                   type="button"
-                  onClick={openLanding}
+                  disabled={!playback.videoEnded}
+                  onClick={handlePlayerNext}
                 >
                   다음으로
                 </button>
