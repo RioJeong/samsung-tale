@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import pawPatrol from "./assets/paw-patrol.png";
 import zootopia from "./assets/zootopia.png";
 import mario from "./assets/super-mario-galaxy-hero-16x9.jpg";
+import rabbitThumb from "./assets/little-rabit-thumbnail.png";
+import hbnb from "./assets/hbnb.png";
+import spaceCat from "./assets/space-cat.png";
 import {
   BookOpen,
   Check,
@@ -60,17 +63,19 @@ const libraryStories = [
     character: "lulu",
     moral: "teamwork",
     length: "p6",
-    voice: "mom"
+    voice: "mom",
+    image: rabbitThumb
   },
   {
     id: "s2",
-    title: "달빛 바다의 약속",
-    progress: "0%",
+    title: "흥부 놀부",
+    progress: "75%",
     background: "ocean",
     character: "popo",
     moral: "promise",
     length: "p4",
-    voice: "narrator"
+    voice: "narrator",
+    image: hbnb
   },
   {
     id: "s3",
@@ -80,7 +85,8 @@ const libraryStories = [
     character: "mio",
     moral: "courage",
     length: "p8",
-    voice: "friend"
+    voice: "friend",
+    image: spaceCat
   }
 ];
 
@@ -764,6 +770,11 @@ export default function App() {
                         libraryStories.findIndex((item) => item.id === story.id)
                       );
                     }}
+                    style={{
+                      backgroundImage: `linear-gradient(rgba(12, 17, 24, 0.5), rgba(12, 17, 24, 0.5)), url(${story.image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
                   >
                     <strong>{story.title}</strong>
                     <span>{story.progress}</span>
@@ -805,6 +816,11 @@ export default function App() {
                     setLibraryFocus(index);
                   }}
                   onClick={() => startPlayerFromLibrary(index)}
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(12, 17, 24, 0.4), rgba(12, 17, 24, 0.8)), url(${story.image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
                 >
                   <div className="library-card-copy">
                     <strong>{story.title}</strong>
