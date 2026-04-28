@@ -976,7 +976,7 @@ export default function App() {
         {showFinalConfirm && (
           <div className="popup-overlay">
             <div className="popup-box">
-              <p>동화가 다 만들어졌어요<br/>바로 확인하시겠어요?</p>
+              <p>동화가 다 만들어졌어요,<br/>바로 확인하시겠어요?</p>
               <button
                 type="button"
                 className="focused"
