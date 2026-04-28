@@ -14,8 +14,17 @@ import {
   Sparkles
 } from "lucide-react";
 import storyScene1 from "./assets/story/scene_1.png";
+import storyScene2 from "./assets/story/scene_2.png";
+import storyScene3 from "./assets/story/scene_3.png";
+import storyScene4 from "./assets/story/scene_4.png";
 import storyVideo0 from "./assets/story/video_0.mp4";
 import storyVideo1 from "./assets/story/video_1.mp4";
+import storyVideo2 from "./assets/story/video_2.mp4";
+import storyVideo3 from "./assets/story/video_3.mp4";
+import storyVideo4 from "./assets/story/video_4.mp4";
+
+const carrotSceneAssets = [storyScene1, storyScene2, storyScene3, storyScene4];
+const carrotVideoAssets = [storyVideo1, storyVideo2, storyVideo3, storyVideo4];
 
 const sectionOrder = ["voice", "character", "story"];
 const storyFieldOrder = ["background", "moral", "length"];
@@ -145,6 +154,14 @@ function buildPlot(selection) {
 }
 
 function buildLines(selection) {
+  if (selection?.id === "s1" || selection?.title === "꼬마토끼의 반쪽당근") {
+    return [
+      '커다란 당근을 든 토끼가 배고파서 "엉엉" 울고 있는 곰을 만났어요.',
+      '토끼는 당근을 "똑!" 나눠 곰에게 주었지요.',
+      '둘은 나란히 앉아 "아삭아삭" 맛있게 먹었어요.',
+      "함께 나눠 먹으니 훨씬 더 달콤했답니다."
+    ];
+  }
   return [
     "꼬마토끼가 주황색 당근을 가지고 걸어가다 엉엉 울고 있는 곰을 만났어요."
   ];
@@ -182,7 +199,10 @@ export default function App() {
   const openingVideoRef = useRef(null);
   const openingPlaybackRef = useRef(null);
   const nextButtonRef = useRef(null);
+  const nextActionLockRef = useRef(false);
+  const nextActionLockTimerRef = useRef(null);
   const [playback, setPlayback] = useState({
+    storyId: "generated",
     title: makeTitle(initialSelection),
     background: initialSelection.background,
     character: initialSelection.character,
@@ -192,6 +212,7 @@ export default function App() {
     subtitleEnabled: false,
     subtitleWordIndex: -1,
     videoStarted: false,
+    videoReady: false,
     videoEnded: false
   });
 
@@ -212,11 +233,17 @@ export default function App() {
       : 0;
 
   const currentLine = playback.lines[playback.lineIndex] || "";
-  const nextLine = playback.lines[playback.lineIndex + 1] || "";
   const currentWords = currentLine.split(" ").filter(Boolean);
-  const showSubtitleScene = !playback.videoStarted;
+  const showSubtitleScene = !playback.videoStarted || !playback.videoReady;
   const showVideoScene = playback.videoStarted;
-  const isCarrotStoryTitle = playback.title === "꼬마토끼의 반쪽당근";
+  const isCarrotStoryTitle = playback.storyId === "s1";
+  const currentSceneIndex = Math.min(playback.lineIndex, carrotSceneAssets.length - 1);
+  const currentSceneAsset = isCarrotStoryTitle
+    ? carrotSceneAssets[currentSceneIndex]
+    : storyScene1;
+  const currentVideoAsset = isCarrotStoryTitle
+    ? carrotVideoAssets[Math.min(playback.lineIndex, carrotVideoAssets.length - 1)]
+    : storyVideo1;
   const highlightedWordIndex = playback.subtitleEnabled
     ? Math.min(playback.subtitleWordIndex, currentWords.length - 1)
     : -1;
@@ -296,11 +323,37 @@ export default function App() {
 
   function triggerPlayerSpaceAction() {
     setPlayback((prev) => {
+      const words = (prev.lines[prev.lineIndex] || "").split(" ").filter(Boolean);
+      const lastWordIndex = words.length - 1;
+
       if (isCarrotStoryTitle) {
-        if (!prev.videoStarted) {
-          return { ...prev, videoStarted: true, playing: true, videoEnded: false };
+        if (prev.videoStarted) {
+          if (prev.videoEnded) {
+            return prev;
+          }
+          return { ...prev, playing: !prev.playing };
         }
-        return { ...prev, playing: !prev.playing };
+        if (!prev.subtitleEnabled) {
+          return {
+            ...prev,
+            subtitleEnabled: true,
+            subtitleWordIndex: 0,
+            videoStarted: false,
+            videoReady: false,
+            playing: false,
+            videoEnded: false
+          };
+        }
+        if (prev.subtitleWordIndex < lastWordIndex) {
+          return { ...prev, subtitleWordIndex: prev.subtitleWordIndex + 1 };
+        }
+        return {
+          ...prev,
+          videoStarted: true,
+          videoReady: false,
+          playing: true,
+          videoEnded: false
+        };
       }
       if (!prev.subtitleEnabled) {
         return {
@@ -308,15 +361,65 @@ export default function App() {
           subtitleEnabled: true,
           subtitleWordIndex: 0,
           videoStarted: false,
+          videoReady: false,
           playing: false,
           videoEnded: false
         };
       }
+      if (prev.subtitleWordIndex < lastWordIndex) {
+        return { ...prev, subtitleWordIndex: prev.subtitleWordIndex + 1 };
+      }
       if (!prev.videoStarted) {
-        return { ...prev, videoStarted: true, playing: true, videoEnded: false };
+        return {
+          ...prev,
+          videoStarted: true,
+          videoReady: false,
+          playing: true,
+          videoEnded: false
+        };
       }
       return { ...prev, playing: !prev.playing };
     });
+  }
+
+  function moveToNextCarrotStep() {
+    if (!playback.videoEnded) {
+      return;
+    }
+    if (playback.lineIndex >= playback.lines.length - 1) {
+      openLanding();
+      return;
+    }
+    setPlayback((prev) => ({
+      ...prev,
+      lineIndex: prev.lineIndex + 1,
+      playing: false,
+      subtitleEnabled: false,
+      subtitleWordIndex: -1,
+      videoStarted: false,
+      videoReady: false,
+      videoEnded: false
+    }));
+  }
+
+  function handlePlayerNext() {
+    if (nextActionLockRef.current) {
+      return;
+    }
+    nextActionLockRef.current = true;
+    if (nextActionLockTimerRef.current) {
+      window.clearTimeout(nextActionLockTimerRef.current);
+    }
+    nextActionLockTimerRef.current = window.setTimeout(() => {
+      nextActionLockRef.current = false;
+      nextActionLockTimerRef.current = null;
+    }, 220);
+
+    if (playback.storyId === "s1") {
+      moveToNextCarrotStep();
+      return;
+    }
+    openLanding();
   }
 
   function startPlayerFromSelection() {
@@ -330,6 +433,7 @@ export default function App() {
   function proceedToPlayer() {
     setShowFinalConfirm(false);
     setPlayback({
+      storyId: "generated",
       title: makeTitle(selection),
       background: selection.background,
       character: selection.character,
@@ -339,6 +443,7 @@ export default function App() {
       subtitleEnabled: false,
       subtitleWordIndex: -1,
       videoStarted: false,
+      videoReady: false,
       videoEnded: false
     });
     navigateTo("player");
@@ -347,6 +452,7 @@ export default function App() {
   function startPlayerFromLibrary(index) {
     const story = libraryStories[index];
     const storyPlayback = {
+      storyId: story.id,
       title: story.title,
       background: story.background,
       character: story.character,
@@ -356,6 +462,7 @@ export default function App() {
       subtitleEnabled: false,
       subtitleWordIndex: -1,
       videoStarted: false,
+      videoReady: false,
       videoEnded: false
     };
 
@@ -569,13 +676,20 @@ export default function App() {
           handled = true;
         }
       } else if (screen === "player") {
-        if (playback.videoEnded && key === "Enter") {
-          openLanding();
+        if ((key === " " || key === "Enter") && event.repeat) {
+          handled = true;
+        } else if (playback.videoEnded && (key === "Enter" || key === " ")) {
+          handlePlayerNext();
           handled = true;
         } else if (key === " " || key === "Enter") {
           triggerPlayerSpaceAction();
           handled = true;
         } else if (key === "ArrowLeft") {
+          if (playback.storyId === "s1") {
+            handled = true;
+            event.preventDefault();
+            return;
+          }
           setPlayback((prev) => ({
             ...prev,
             lineIndex: Math.max(0, prev.lineIndex - 1),
@@ -583,6 +697,11 @@ export default function App() {
           }));
           handled = true;
         } else if (key === "ArrowRight") {
+          if (playback.storyId === "s1") {
+            handled = true;
+            event.preventDefault();
+            return;
+          }
           setPlayback((prev) => ({
             ...prev,
             lineIndex: Math.min(prev.lines.length - 1, prev.lineIndex + 1),
@@ -635,24 +754,6 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
-    if (screen !== "player" || !playback.subtitleEnabled || playback.videoStarted) {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      setPlayback((prev) => {
-        const words = (prev.lines[prev.lineIndex] || "").split(" ").filter(Boolean);
-        if (words.length === 0 || prev.subtitleWordIndex >= words.length - 1) {
-          return prev;
-        }
-        return { ...prev, subtitleWordIndex: prev.subtitleWordIndex + 1 };
-      });
-    }, 340);
-
-    return () => window.clearInterval(timer);
-  }, [playback.subtitleEnabled, playback.videoStarted, screen]);
-
-  useEffect(() => {
     if (screen !== "player") {
       return;
     }
@@ -675,6 +776,14 @@ export default function App() {
     }
     nextButtonRef.current?.focus();
   }, [playback.videoEnded, screen]);
+
+  useEffect(() => {
+    return () => {
+      if (nextActionLockTimerRef.current) {
+        window.clearTimeout(nextActionLockTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className={`app screen-${screen}`}>
@@ -1067,15 +1176,36 @@ export default function App() {
                 : `cover-${playback.background}`
             }`}
           >
-            {showSubtitleScene && (
-              <img className="player-scene-image" src={storyScene1} alt="" />
-            )}
+            {(showSubtitleScene || showVideoScene) &&
+              (isCarrotStoryTitle ? (
+                <div className="player-scene-stack" aria-hidden="true">
+                  {carrotSceneAssets.map((src, index) => (
+                    <img
+                      key={`carrot-scene-${index}`}
+                      className={`player-scene-image ${
+                        index === currentSceneIndex ? "active-scene" : ""
+                      }`}
+                      src={src}
+                      alt=""
+                    />
+                  ))}
+                </div>
+              ) : (
+                <img className="player-scene-image active-scene" src={currentSceneAsset} alt="" />
+              ))}
             {showVideoScene && (
               <video
+                key={`story-video-${playback.storyId}-${playback.lineIndex}`}
                 ref={videoRef}
-                className="player-video"
-                src={storyVideo1}
+                className={`player-video ${playback.videoReady ? "ready" : ""}`}
+                src={currentVideoAsset}
                 playsInline
+                preload="auto"
+                onLoadedData={() => {
+                  setPlayback((prev) =>
+                    prev.videoStarted ? { ...prev, videoReady: true } : prev
+                  );
+                }}
                 onEnded={() => {
                   setPlayback((prev) => ({ ...prev, playing: false, videoEnded: true }));
                 }}
@@ -1101,9 +1231,6 @@ export default function App() {
                     playback.title
                   )}
                 </strong>
-                <span>
-                  {playback.lineIndex + 1} / {playback.lines.length}
-                </span>
               </div>
               <div className="caption-box">
                 <p className="caption-current">
@@ -1119,12 +1246,12 @@ export default function App() {
                     </span>
                   ))}
                 </p>
-                {nextLine && <p className="caption-next">{nextLine}</p>}
                 <button
                   ref={nextButtonRef}
                   className={`dialog-next-btn ${playback.videoEnded ? "focused" : ""}`}
                   type="button"
-                  onClick={openLanding}
+                  disabled={!playback.videoEnded}
+                  onClick={handlePlayerNext}
                 >
                   다음으로
                 </button>
