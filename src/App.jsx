@@ -64,13 +64,13 @@ const styles = [
     locked: false
   },
   {
-    id: "cinematic",
-    label: "시네마틱 3D",
-    tagline: "영화 같은 입체감",
+    id: "baekheena",
+    label: "백희나 풍 인형 동화",
+    tagline: "손으로 빚은 인형의 입체 동화",
     description:
-      "픽사풍의 정교한 3D 렌더링과 빛 표현. 장엄한 판타지·우주 이야기에 잘 어울려요.",
+      "찰흙·천·종이로 만든 인형과 미니어처 무대를 사진으로 담아내는 따뜻한 입체 동화 스타일. 손맛이 살아있는 질감과 포근한 조명이 매력적입니다.",
     swatch:
-      "radial-gradient(circle at 30% 30%, #7ed4ff 0 20%, transparent 50%), linear-gradient(135deg, #1d3557 0%, #457b9d 60%, #ffe6a7 100%)",
+      "radial-gradient(circle at 70% 25%, #fff4dd 0 22%, transparent 55%), linear-gradient(135deg, #d8a373 0%, #e9c46a 35%, #c98056 70%, #f5e6d3 100%)",
     locked: true,
     premium: true
   }
