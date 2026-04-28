@@ -23,13 +23,39 @@ import storyVideo1 from "./assets/story/video_1.mp4";
 import storyVideo2 from "./assets/story/video_2.mp4";
 import storyVideo3 from "./assets/story/video_3.mp4";
 import storyVideo4 from "./assets/story/video_4.mp4";
+import openingBrightAudio from "./assets/story/bright.wav";
+import speech1Audio from "./assets/story/speech-1.wav";
+import speech2Audio from "./assets/story/speech-2.wav";
+import speech3Audio from "./assets/story/speech-3.wav";
+import speech4Audio from "./assets/story/speech-4.wav";
 import luluThumb from "./assets/characters/ruru.png";
 import mioThumb from "./assets/characters/mio.png";
 import rumiThumb from "./assets/characters/rumi.png";
 import yoshiThumb from "./assets/characters/yoshi.png";
 
-const carrotSceneAssets = [storyScene1, storyScene2, storyScene3, storyScene4];
-const carrotVideoAssets = [storyVideo1, storyVideo2, storyVideo3, storyVideo4];
+const carrotSteps = [
+  {
+    scene: storyScene1,
+    video: storyVideo1,
+    line: '커다란 당근을 든 토끼가 배고파서 "엉엉" 울고 있는 곰을 만났어요.'
+  },
+  {
+    scene: storyScene2,
+    video: storyVideo2,
+    line: '토끼는 당근을 "똑!" 나눠 곰에게 주었지요.'
+  },
+  {
+    scene: storyScene3,
+    video: storyVideo3,
+    line: '둘은 나란히 앉아 "아삭아삭" 맛있게 먹었어요.'
+  },
+  {
+    scene: storyScene4,
+    video: storyVideo4,
+    line: "함께 나눠 먹으니 훨씬 더 달콤했답니다."
+  }
+];
+const carrotStoryTitle = "꼬마토끼의 반쪽 당근";
 
 const sectionOrder = ["character", "story"];
 const storyFieldOrder = ["background", "moral", "length"];
@@ -184,13 +210,12 @@ function buildPlot(selection) {
 }
 
 function buildLines(selection) {
-  if (selection?.id === "s1" || selection?.title === "꼬마토끼의 반쪽당근") {
-    return [
-      '커다란 당근을 든 토끼가 배고파서 "엉엉" 울고 있는 곰을 만났어요.',
-      '토끼는 당근을 "똑!" 나눠 곰에게 주었지요.',
-      '둘은 나란히 앉아 "아삭아삭" 맛있게 먹었어요.',
-      "함께 나눠 먹으니 훨씬 더 달콤했답니다."
-    ];
+  if (
+    selection?.id === "s1" ||
+    selection?.title === "꼬마토끼의 반쪽당근" ||
+    selection?.title === carrotStoryTitle
+  ) {
+    return carrotSteps.map((step) => step.line);
   }
   return [
     "꼬마토끼가 주황색 당근을 가지고 걸어가다 엉엉 울고 있는 곰을 만났어요."
@@ -231,6 +256,14 @@ export default function App() {
   const historyRef = useRef([]);
   const videoRef = useRef(null);
   const openingVideoRef = useRef(null);
+  const openingAudioRef = useRef(null);
+  const openingAudioFadeTimerRef = useRef(null);
+  const openingAudioFadeStartedRef = useRef(false);
+  const speech1AudioRef = useRef(null);
+  const speech2AudioRef = useRef(null);
+  const speech3AudioRef = useRef(null);
+  const speech4AudioRef = useRef(null);
+  const playerVideo1BrightAudioRef = useRef(null);
   const openingPlaybackRef = useRef(null);
   const nextButtonRef = useRef(null);
   const nextActionLockRef = useRef(false);
@@ -273,12 +306,13 @@ export default function App() {
   const showSubtitleScene = !playback.videoStarted || !playback.videoReady;
   const showVideoScene = playback.videoStarted;
   const isCarrotStoryTitle = playback.storyId === "s1";
-  const currentSceneIndex = Math.min(playback.lineIndex, carrotSceneAssets.length - 1);
+  const currentSceneIndex = Math.min(playback.lineIndex, carrotSteps.length - 1);
+  const currentCarrotStep = carrotSteps[currentSceneIndex] || carrotSteps[0];
   const currentSceneAsset = isCarrotStoryTitle
-    ? carrotSceneAssets[currentSceneIndex]
+    ? currentCarrotStep.scene
     : storyScene1;
   const currentVideoAsset = isCarrotStoryTitle
-    ? carrotVideoAssets[Math.min(playback.lineIndex, carrotVideoAssets.length - 1)]
+    ? currentCarrotStep.video
     : storyVideo1;
   const highlightedWordIndex = playback.subtitleEnabled
     ? Math.min(playback.subtitleWordIndex, currentWords.length - 1)
@@ -304,7 +338,20 @@ export default function App() {
     setScreen("landing");
   }
 
-  function finishOpening() {
+  function stopOpeningAudio() {
+    if (openingAudioFadeTimerRef.current) {
+      window.clearInterval(openingAudioFadeTimerRef.current);
+      openingAudioFadeTimerRef.current = null;
+    }
+    openingAudioFadeStartedRef.current = false;
+    if (openingAudioRef.current) {
+      openingAudioRef.current.pause();
+      openingAudioRef.current.currentTime = 0;
+      openingAudioRef.current.volume = 1;
+    }
+  }
+
+  function completeOpeningTransition() {
     if (openingPlaybackRef.current) {
       setPlayback(openingPlaybackRef.current);
       openingPlaybackRef.current = null;
@@ -312,6 +359,93 @@ export default function App() {
       return;
     }
     setScreen("landing");
+  }
+
+  function finishOpening() {
+    stopOpeningAudio();
+    completeOpeningTransition();
+  }
+
+  function getSpeechAudioRefByIndex(index) {
+    if (index === 0) return speech1AudioRef;
+    if (index === 1) return speech2AudioRef;
+    if (index === 2) return speech3AudioRef;
+    if (index === 3) return speech4AudioRef;
+    return null;
+  }
+
+  function stopSpeechAudios() {
+    [speech1AudioRef, speech2AudioRef, speech3AudioRef, speech4AudioRef].forEach((ref) => {
+      if (!ref.current) {
+        return;
+      }
+      ref.current.pause();
+      ref.current.currentTime = 0;
+    });
+  }
+
+  function stopPlayerVideo1BrightAudio() {
+    const audio = playerVideo1BrightAudioRef.current;
+    if (!audio) {
+      return;
+    }
+    audio.pause();
+    audio.currentTime = 0;
+    audio.volume = 1;
+  }
+
+  function playSpeechAudioByIndex(index) {
+    const ref = getSpeechAudioRefByIndex(index);
+    const audio = ref?.current;
+    if (!audio) {
+      return;
+    }
+    stopSpeechAudios();
+    audio.currentTime = 0;
+    void audio.play().catch(() => {});
+  }
+
+  function startOpeningAudioFade(durationMs = 1500) {
+    const audio = openingAudioRef.current;
+    if (!audio || audio.paused || openingAudioFadeStartedRef.current) {
+      return;
+    }
+    openingAudioFadeStartedRef.current = true;
+
+    if (openingAudioFadeTimerRef.current) {
+      window.clearInterval(openingAudioFadeTimerRef.current);
+      openingAudioFadeTimerRef.current = null;
+    }
+
+    const tickMs = 50;
+    const initialVolume = Math.max(0, Math.min(1, audio.volume ?? 1));
+    const totalSteps = Math.max(1, Math.ceil(durationMs / tickMs));
+    let step = 0;
+
+    openingAudioFadeTimerRef.current = window.setInterval(() => {
+      step += 1;
+      const ratio = Math.max(0, 1 - step / totalSteps);
+      audio.volume = initialVolume * ratio;
+
+      if (step >= totalSteps) {
+        if (openingAudioFadeTimerRef.current) {
+          window.clearInterval(openingAudioFadeTimerRef.current);
+          openingAudioFadeTimerRef.current = null;
+        }
+        audio.volume = 0;
+      }
+    }, tickMs);
+  }
+
+  function handleOpeningVideoTimeUpdate() {
+    const video = openingVideoRef.current;
+    if (!video || !Number.isFinite(video.duration) || video.duration <= 0) {
+      return;
+    }
+    const remain = video.duration - video.currentTime;
+    if (remain <= 1.5) {
+      startOpeningAudioFade(Math.max(250, remain * 1000));
+    }
   }
 
   function navigateTo(nextScreen) {
@@ -413,6 +547,7 @@ export default function App() {
           return { ...prev, playing: !prev.playing };
         }
         if (!prev.subtitleEnabled) {
+          playSpeechAudioByIndex(prev.lineIndex);
           return {
             ...prev,
             subtitleEnabled: true,
@@ -426,6 +561,7 @@ export default function App() {
         if (prev.subtitleWordIndex < lastWordIndex) {
           return { ...prev, subtitleWordIndex: prev.subtitleWordIndex + 1 };
         }
+        stopSpeechAudios();
         return {
           ...prev,
           videoStarted: true,
@@ -465,6 +601,8 @@ export default function App() {
     if (!playback.videoEnded) {
       return;
     }
+    stopSpeechAudios();
+    stopPlayerVideo1BrightAudio();
     if (playback.lineIndex >= playback.lines.length - 1) {
       openLanding();
       return;
@@ -502,6 +640,7 @@ export default function App() {
   }
 
   function startPlayerFromSelection() {
+    stopSpeechAudios();
     setIsCreatingFullStory(true);
     setTimeout(() => {
       setIsCreatingFullStory(false);
@@ -511,6 +650,30 @@ export default function App() {
 
   function proceedToPlayer() {
     setShowFinalConfirm(false);
+    stopSpeechAudios();
+
+    if (selection.character === "lulu") {
+      const luluStory = libraryStories.find((story) => story.id === "s1");
+      if (luluStory) {
+        openingPlaybackRef.current = {
+          storyId: luluStory.id,
+          title: carrotStoryTitle,
+          background: luluStory.background,
+          character: luluStory.character,
+          lines: buildLines(luluStory),
+          lineIndex: 0,
+          playing: false,
+          subtitleEnabled: false,
+          subtitleWordIndex: -1,
+          videoStarted: false,
+          videoReady: false,
+          videoEnded: false
+        };
+        navigateTo("opening");
+        return;
+      }
+    }
+
     setPlayback({
       storyId: "generated",
       title: makeTitle(selection),
@@ -529,10 +692,12 @@ export default function App() {
   }
 
   function startPlayerFromLibrary(index) {
+    stopSpeechAudios();
     const story = libraryStories[index];
+    const resolvedTitle = story.id === "s1" ? carrotStoryTitle : story.title;
     const storyPlayback = {
       storyId: story.id,
-      title: story.title,
+      title: resolvedTitle,
       background: story.background,
       character: story.character,
       lines: buildLines(story),
@@ -890,31 +1055,67 @@ export default function App() {
 
   useEffect(() => {
     if (screen !== "opening") {
+      stopOpeningAudio();
       return;
     }
     const openingVideo = openingVideoRef.current;
+    const openingAudio = openingAudioRef.current;
     if (!openingVideo) {
       return;
     }
     void openingVideo.play();
+    if (openingAudio) {
+      openingAudioFadeStartedRef.current = false;
+      openingAudio.volume = 1;
+      openingAudio.currentTime = 0;
+      void openingAudio.play().catch(() => {});
+    }
   }, [screen]);
 
   useEffect(() => {
     if (screen !== "player") {
+      stopSpeechAudios();
+    }
+  }, [screen]);
+
+  useEffect(() => {
+    if (screen !== "player") {
+      stopPlayerVideo1BrightAudio();
       return;
     }
 
     const video = videoRef.current;
+    const brightAudio = playerVideo1BrightAudioRef.current;
+    const isCarrotVideoStep =
+      playback.storyId === "s1" &&
+      playback.videoStarted &&
+      playback.lineIndex >= 0 &&
+      playback.lineIndex <= 3;
+
     if (!video || !playback.videoStarted) {
+      stopPlayerVideo1BrightAudio();
       return;
     }
 
     if (playback.playing) {
       void video.play();
+      if (isCarrotVideoStep && brightAudio) {
+        if (Math.abs(brightAudio.currentTime - video.currentTime) > 0.25) {
+          brightAudio.currentTime = Math.max(0, video.currentTime);
+        }
+        void brightAudio.play().catch(() => {});
+      }
     } else {
       video.pause();
+      if (brightAudio) {
+        brightAudio.pause();
+      }
     }
-  }, [playback.playing, playback.videoStarted, screen]);
+
+    if (!isCarrotVideoStep) {
+      stopPlayerVideo1BrightAudio();
+    }
+  }, [playback.playing, playback.videoStarted, playback.lineIndex, playback.storyId, screen]);
 
   useEffect(() => {
     if (screen !== "player" || !playback.videoEnded) {
@@ -928,8 +1129,37 @@ export default function App() {
       if (nextActionLockTimerRef.current) {
         window.clearTimeout(nextActionLockTimerRef.current);
       }
+      if (openingAudioFadeTimerRef.current) {
+        window.clearInterval(openingAudioFadeTimerRef.current);
+      }
+      stopSpeechAudios();
+      stopPlayerVideo1BrightAudio();
     };
   }, []);
+
+  function handlePlayerVideoTimeUpdate() {
+    const video = videoRef.current;
+    const audio = playerVideo1BrightAudioRef.current;
+    const isCarrotVideoStep =
+      playback.storyId === "s1" &&
+      playback.videoStarted &&
+      playback.lineIndex >= 0 &&
+      playback.lineIndex <= 3;
+
+    if (!video || !audio || !isCarrotVideoStep) {
+      return;
+    }
+    if (!Number.isFinite(video.duration) || video.duration <= 0) {
+      return;
+    }
+
+    const remain = video.duration - video.currentTime;
+    if (remain <= 1) {
+      audio.volume = Math.max(0, Math.min(1, remain / 1));
+    } else {
+      audio.volume = 1;
+    }
+  }
 
   return (
     <div className={`app screen-${screen}`}>
@@ -996,8 +1226,10 @@ export default function App() {
               autoPlay
               muted
               playsInline
+              onTimeUpdate={handleOpeningVideoTimeUpdate}
               onEnded={finishOpening}
             />
+            <audio ref={openingAudioRef} src={openingBrightAudio} preload="auto" />
           </section>
         )}
 
@@ -1368,22 +1600,12 @@ export default function App() {
             }`}
           >
             {(showSubtitleScene || showVideoScene) &&
-              (isCarrotStoryTitle ? (
-                <div className="player-scene-stack" aria-hidden="true">
-                  {carrotSceneAssets.map((src, index) => (
-                    <img
-                      key={`carrot-scene-${index}`}
-                      className={`player-scene-image ${
-                        index === currentSceneIndex ? "active-scene" : ""
-                      }`}
-                      src={src}
-                      alt=""
-                    />
-                  ))}
-                </div>
-              ) : (
-                <img className="player-scene-image active-scene" src={currentSceneAsset} alt="" />
-              ))}
+              <img
+                key={`scene-${playback.storyId}-${currentSceneIndex}`}
+                className="player-scene-image active-scene"
+                src={currentSceneAsset}
+                alt=""
+              />}
             {showVideoScene && (
               <video
                 key={`story-video-${playback.storyId}-${playback.lineIndex}`}
@@ -1392,12 +1614,14 @@ export default function App() {
                 src={currentVideoAsset}
                 playsInline
                 preload="auto"
+                onTimeUpdate={handlePlayerVideoTimeUpdate}
                 onLoadedData={() => {
                   setPlayback((prev) =>
                     prev.videoStarted ? { ...prev, videoReady: true } : prev
                   );
                 }}
                 onEnded={() => {
+                  stopPlayerVideo1BrightAudio();
                   setPlayback((prev) => ({ ...prev, playing: false, videoEnded: true }));
                 }}
               />
@@ -1448,6 +1672,11 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <audio ref={speech1AudioRef} src={speech1Audio} preload="auto" />
+            <audio ref={speech2AudioRef} src={speech2Audio} preload="auto" />
+            <audio ref={speech3AudioRef} src={speech3Audio} preload="auto" />
+            <audio ref={speech4AudioRef} src={speech4Audio} preload="auto" />
+            <audio ref={playerVideo1BrightAudioRef} src={openingBrightAudio} preload="auto" />
           </section>
         )}
       </main>
