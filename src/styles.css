@@ -641,7 +641,8 @@ button {
   object-fit: cover;
 }
 
-.loading-overlay {
+.loading-overlay,
+.popup-overlay {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -657,6 +658,39 @@ button {
   border-radius: 12px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.popup-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.popup-box p {
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 700;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.popup-box button {
+  min-height: 44px;
+  min-width: 120px;
+  border-radius: 8px;
+  border: 0;
+  background: #f5c84c;
+  color: #1a2536;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.popup-box button.focused {
+  box-shadow: 0 0 0 4px #fff, 0 0 0 7px #f5c84c;
 }
 
 .loading-overlay p {

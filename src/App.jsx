@@ -161,6 +161,8 @@ export default function App() {
   const [bgIndex, setBgIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCreatingFullStory, setIsCreatingFullStory] = useState(false);
+  const [showFinalConfirm, setShowFinalConfirm] = useState(false);
   const bgImages = [mario, pawPatrol, zootopia, mario, pawPatrol];
 
 
@@ -318,6 +320,15 @@ export default function App() {
   }
 
   function startPlayerFromSelection() {
+    setIsCreatingFullStory(true);
+    setTimeout(() => {
+      setIsCreatingFullStory(false);
+      setShowFinalConfirm(true);
+    }, 3000);
+  }
+
+  function proceedToPlayer() {
+    setShowFinalConfirm(false);
     setPlayback({
       title: makeTitle(selection),
       background: selection.background,
@@ -526,7 +537,15 @@ export default function App() {
           handled = true;
         }
       } else if (screen === "confirm") {
-        if (
+        if (showFinalConfirm) {
+          if (key === "Enter") {
+            proceedToPlayer();
+            handled = true;
+          } else if (key === "Escape" || key === "Backspace") {
+            setShowFinalConfirm(false);
+            handled = true;
+          }
+        } else if (
           key === "ArrowLeft" ||
           key === "ArrowRight" ||
           key === "ArrowUp" ||
@@ -690,7 +709,27 @@ export default function App() {
         {isGenerating && (
           <div className="loading-overlay">
             <div className="spinner"></div>
-            <p>Gemini가 줄거리를 만들고 있어요...</p>
+            <p>AI가 줄거리를 만들고 있어요...</p>
+          </div>
+        )}
+        {isCreatingFullStory && (
+          <div className="loading-overlay">
+            <div className="spinner"></div>
+            <p>AI가 동화를 완성하고 있어요...</p>
+          </div>
+        )}
+        {showFinalConfirm && (
+          <div className="popup-overlay">
+            <div className="popup-box">
+              <p>동화가 다 만들어졌어요<br/>바로 확인하시겠어요?</p>
+              <button
+                type="button"
+                className="focused"
+                onClick={proceedToPlayer}
+              >
+                확인
+              </button>
+            </div>
           </div>
         )}
         {screen === "opening" && (
