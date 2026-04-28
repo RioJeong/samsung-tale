@@ -840,6 +840,16 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.yoshi-sequence-overlay {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background: #000;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
 .popup-box {
   display: flex;
   flex-direction: column;
