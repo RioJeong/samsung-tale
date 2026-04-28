@@ -50,10 +50,14 @@ const backgrounds = [
 ];
 
 const morals = [
-  { id: "courage", label: "용기 내기" },
-  { id: "teamwork", label: "친구와 협동" },
-  { id: "promise", label: "약속 지키기" },
-  { id: "respect", label: "다름을 존중하기" }
+  { id: "res", label: "다름의 인정과 존중 (편견 깨기)" },
+  { id: "share", label: "나눔과 배려의 기쁨" },
+  { id: "resp", label: "정직함과 책임감" },
+  { id: "npng", label: "포기하지 않는 끈기와 성실함" },
+  { id: "friendship", label: "협동과 우정의 힘" },
+  { id: "self-resp", label: "스스로를 사랑하는 마음 (자존감)" },
+  { id: "cour", label: "두려움을 이겨내는 용기" },
+  { id: "druid", label: "자연과 생명에 대한 사랑" },
 ];
 
 const lengths = [
@@ -92,7 +96,7 @@ const libraryStories = [
     progress: "100%",
     background: "space",
     character: "mio",
-    moral: "courage",
+    moral: "respect",
     length: "p8",
     voice: "friend",
     image: spaceCat
@@ -118,7 +122,7 @@ const initialSelection = {
   voice: "mom",
   character: "lulu",
   background: "forest",
-  moral: "teamwork",
+  moral: "res",
   length: "p6"
 };
 
@@ -173,6 +177,9 @@ function makeTitle(selection) {
 export default function App() {
   const [bgIndex, setBgIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isCreatingFullStory, setIsCreatingFullStory] = useState(false);
+  const [showFinalConfirm, setShowFinalConfirm] = useState(false);
   const bgImages = [mario, pawPatrol, zootopia, mario, pawPatrol];
 
 
@@ -305,9 +312,13 @@ export default function App() {
   }
 
   function generatePreview() {
-    setGeneratedPlot(buildPlot(selection));
-    setConfirmFocus("ok");
-    navigateTo("confirm");
+    setIsGenerating(true);
+    setTimeout(() => {
+      setGeneratedPlot(buildPlot(selection));
+      setConfirmFocus("ok");
+      setIsGenerating(false);
+      navigateTo("confirm");
+    }, 3000);
   }
 
   function triggerPlayerSpaceAction() {
@@ -412,6 +423,15 @@ export default function App() {
   }
 
   function startPlayerFromSelection() {
+    setIsCreatingFullStory(true);
+    setTimeout(() => {
+      setIsCreatingFullStory(false);
+      setShowFinalConfirm(true);
+    }, 3000);
+  }
+
+  function proceedToPlayer() {
+    setShowFinalConfirm(false);
     setPlayback({
       storyId: "generated",
       title: makeTitle(selection),
@@ -624,7 +644,15 @@ export default function App() {
           handled = true;
         }
       } else if (screen === "confirm") {
-        if (
+        if (showFinalConfirm) {
+          if (key === "Enter") {
+            proceedToPlayer();
+            handled = true;
+          } else if (key === "Escape" || key === "Backspace") {
+            setShowFinalConfirm(false);
+            handled = true;
+          }
+        } else if (
           key === "ArrowLeft" ||
           key === "ArrowRight" ||
           key === "ArrowUp" ||
@@ -787,6 +815,32 @@ export default function App() {
       </header>
 
       <main className="tv-shell">
+        {isGenerating && (
+          <div className="loading-overlay">
+            <div className="spinner"></div>
+            <p>AI가 줄거리를 만들고 있어요...</p>
+          </div>
+        )}
+        {isCreatingFullStory && (
+          <div className="loading-overlay">
+            <div className="spinner"></div>
+            <p>AI가 동화를 완성하고 있어요...</p>
+          </div>
+        )}
+        {showFinalConfirm && (
+          <div className="popup-overlay">
+            <div className="popup-box">
+              <p>동화가 다 만들어졌어요<br/>바로 확인하시겠어요?</p>
+              <button
+                type="button"
+                className="focused"
+                onClick={proceedToPlayer}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        )}
         {screen === "opening" && (
           <section className="screen opening-screen">
             <video
