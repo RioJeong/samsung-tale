@@ -1368,33 +1368,6 @@ export default function App() {
 
   return (
     <div className={`app screen-${screen}`}>
-      <header className="app-header">
-        <div className="brand-wrap">
-          <span className="brand-chip">Samsung TV</span>
-          <strong className="brand-title">Kids Tale</strong>
-        </div>
-        <div className="header-actions">
-          <span className="screen-tag">{screenLabel[screen]}</span>
-          {screen !== "landing" && (
-            <button
-              className={`icon-btn ${
-                screen === "library" && libraryZone === "home" ? "focused" : ""
-              }`}
-              type="button"
-              onFocus={() => {
-                if (screen === "library") {
-                  setLibraryZone("home");
-                }
-              }}
-              onClick={openLanding}
-              aria-label="홈"
-            >
-              <House size={18} />
-            </button>
-          )}
-        </div>
-      </header>
-
       <main className="tv-shell">
         {isGenerating && (
           <div className="loading-overlay">
@@ -1499,7 +1472,8 @@ export default function App() {
               ))}
             </div>
             <div className="landing-hero">
-              <p>오늘은 어떤 동화를 시작할까요?</p>
+              <h1 className="landing-main-title">Samsung TV Kids Tale</h1>
+              <p className="landing-subtitle">오늘은 어떤 동화와 함께할까요?</p>
               <div className="landing-actions">
                 {landingActions.map((item, index) => {
                   const Icon = item.icon;
