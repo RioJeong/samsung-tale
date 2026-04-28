@@ -61,17 +61,6 @@ const lengths = [
 const libraryStories = [
   {
     id: "s1",
-    title: "꼬마토끼의 반쪽당근",
-    progress: "0%",
-    background: "forest",
-    character: "lulu",
-    moral: "teamwork",
-    length: "p6",
-    voice: "mom",
-    image: rabbitThumb
-  },
-  {
-    id: "s2",
     title: "흥부 놀부",
     progress: "75%",
     background: "ocean",
@@ -82,7 +71,7 @@ const libraryStories = [
     image: hbnb
   },
   {
-    id: "s3",
+    id: "s2",
     title: "우주 고양이 미오",
     progress: "100%",
     background: "space",
@@ -454,28 +443,33 @@ export default function App() {
           handled = true;
         } else if (key === "ArrowRight") {
           if (libraryZone === "cards") {
-            setLibraryFocus((prev) => Math.min(libraryStories.length - 1, prev + 1));
+            setLibraryFocus((prev) => Math.min(libraryStories.length, prev + 1));
           }
           handled = true;
         } else if (key === "ArrowUp") {
           if (libraryZone === "cards") {
-            setLibraryZone("create");
-          } else if (libraryZone === "create") {
-            setLibraryZone("home");
+            if (libraryFocus <= 2) {
+               setLibraryZone("home");
+            } else {
+               setLibraryFocus((prev) => Math.max(0, prev - 3));
+            }
           }
           handled = true;
         } else if (key === "ArrowDown") {
           if (libraryZone === "home") {
-            setLibraryZone("create");
-          } else if (libraryZone === "create") {
             setLibraryZone("cards");
+            setLibraryFocus(0);
+          } else if (libraryZone === "cards") {
+            setLibraryFocus((prev) => Math.min(libraryStories.length, prev + 3));
           }
           handled = true;
         } else if (key === "Enter") {
           if (libraryZone === "cards") {
-            startPlayerFromLibrary(libraryFocus);
-          } else if (libraryZone === "create") {
-            openCreate();
+            if (libraryFocus === libraryStories.length) {
+              openCreate();
+            } else {
+              startPlayerFromLibrary(libraryFocus);
+            }
           } else {
             openLanding();
           }
@@ -848,20 +842,7 @@ export default function App() {
         {screen === "library" && (
           <section className="screen library-screen">
             <div className="library-head">
-              <h2>기존 동화</h2>
-              <button
-                className={`ghost-btn ${
-                  screen === "library" && libraryZone === "create" ? "focused" : ""
-                }`}
-                type="button"
-                onFocus={() => {
-                  setLibraryZone("create");
-                }}
-                onClick={openCreate}
-              >
-                <Sparkles size={16} />
-                <span>새 동화 만들기</span>
-              </button>
+              <h2>동화 목록</h2>
             </div>
             <div className="library-grid">
               {libraryStories.map((story, index) => (
@@ -888,6 +869,22 @@ export default function App() {
                   </div>
                 </button>
               ))}
+              <button
+                className={`library-card create-card ${
+                  libraryZone === "cards" && libraryFocus === libraryStories.length ? "focused" : ""
+                }`}
+                type="button"
+                onFocus={() => {
+                  setLibraryZone("cards");
+                  setLibraryFocus(libraryStories.length);
+                }}
+                onClick={openCreate}
+              >
+                <div className="create-card-content">
+                  <div className="plus-icon">+</div>
+                  <span>새 동화 만들기</span>
+                </div>
+              </button>
             </div>
           </section>
         )}
