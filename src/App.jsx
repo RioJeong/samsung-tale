@@ -233,7 +233,8 @@ export default function App() {
   const [storyField, setStoryField] = useState("background");
   const [focusedCharacter, setFocusedCharacter] = useState(initialSelection.character);
   const [characterFocusZone, setCharacterFocusZone] = useState("grid");
-  const [lockNoticeShake, setLockNoticeShake] = useState(0);
+  const [proConfirm, setProConfirm] = useState({ open: false, character: null });
+  const [proConfirmFocus, setProConfirmFocus] = useState("yes");
   const [confirmFocus, setConfirmFocus] = useState("ok");
   const [selection, setSelection] = useState(initialSelection);
   const [generatedPlot, setGeneratedPlot] = useState(buildPlot(initialSelection));
@@ -352,13 +353,25 @@ export default function App() {
   }
 
   function pickCharacter(char) {
+    setFocusedCharacter(char.id);
     if (char.locked) {
-      setFocusedCharacter(char.id);
-      setLockNoticeShake((v) => v + 1);
+      setProConfirm({ open: true, character: char });
+      setProConfirmFocus("yes");
       return;
     }
-    setFocusedCharacter(char.id);
     setSelection((prev) => ({ ...prev, character: char.id }));
+  }
+
+  function confirmProPurchase() {
+    const char = proConfirm.character;
+    if (char) {
+      setSelection((prev) => ({ ...prev, character: char.id }));
+    }
+    setProConfirm({ open: false, character: null });
+  }
+
+  function cancelProPurchase() {
+    setProConfirm({ open: false, character: null });
   }
 
   function moveCharacterFocus(direction) {
@@ -568,6 +581,32 @@ export default function App() {
 
       let handled = false;
       const key = event.key;
+
+      if (proConfirm.open) {
+        if (key === "Enter") {
+          if (proConfirmFocus === "yes") {
+            confirmProPurchase();
+          } else {
+            cancelProPurchase();
+          }
+          handled = true;
+        } else if (key === "Escape" || key === "Backspace") {
+          cancelProPurchase();
+          handled = true;
+        } else if (
+          key === "ArrowLeft" ||
+          key === "ArrowRight" ||
+          key === "Tab"
+        ) {
+          setProConfirmFocus((prev) => (prev === "yes" ? "no" : "yes"));
+          handled = true;
+        }
+
+        if (handled) {
+          event.preventDefault();
+        }
+        return;
+      }
 
       if (screen === "opening") {
         if (key === " " || key === "Enter" || key === "Escape") {
@@ -842,6 +881,9 @@ export default function App() {
     landingZone,
     libraryFocus,
     libraryZone,
+    proConfirm.open,
+    proConfirm.character,
+    proConfirmFocus,
     screen,
     section,
     selection,
@@ -1194,11 +1236,11 @@ export default function App() {
                     <aside className="character-detail">
                       {focusedChar.locked && (
                         <div
-                          key={lockNoticeShake}
+                          key={focusedChar.id}
                           className="lock-banner"
                         >
                           <Lock size={14} />
-                          <span>프리미엄 캐릭터입니다 — 곧 만나요!</span>
+                          <span>프리미엄 캐릭터 — 사용 시 20포인트 차감</span>
                         </div>
                       )}
                       <h3 className="character-detail-name">{focusedChar.label}</h3>
@@ -1412,6 +1454,35 @@ export default function App() {
         )}
       </main>
 
+      {proConfirm.open && (
+        <div className="modal-overlay" onClick={cancelProPurchase}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <p className="modal-title">
+              <Lock size={14} />
+              <span>{proConfirm.character?.label}</span>
+            </p>
+            <p className="modal-message">20포인트가 차감됩니다. 사용할까요?</p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className={`modal-btn ${proConfirmFocus === "no" ? "focused" : ""}`}
+                onMouseEnter={() => setProConfirmFocus("no")}
+                onClick={cancelProPurchase}
+              >
+                아니요
+              </button>
+              <button
+                type="button"
+                className={`modal-btn primary ${proConfirmFocus === "yes" ? "focused" : ""}`}
+                onMouseEnter={() => setProConfirmFocus("yes")}
+                onClick={confirmProPurchase}
+              >
+                네, 사용할게요
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
