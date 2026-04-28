@@ -58,6 +58,10 @@ const carrotSteps = [
   }
 ];
 const carrotStoryTitle = "꼬마토끼의 반쪽 당근";
+const luluFixedPlot =
+  "반짝이는 숲속에서 토끼 루루는 배고파 울고 있던 친구를 만나, 가진 것을 기꺼이 나누며 따뜻한 위로를 건넵니다. 4p로 이어지는 짧은 이야기 속에서 둘은 함께 웃음을 되찾고, 작은 배려가 더 큰 기쁨으로 돌아온다는 걸 배웁니다.";
+const yoshiFixedPlot =
+  "반짝이는 숲속에서 캐릭터 요시는 배고파 울고 있던 친구를 만나, 가진 것을 기꺼이 나누며 따뜻한 위로를 건넵니다. 4p로 이어지는 짧은 이야기 속에서 둘은 함께 웃음을 되찾고, 작은 배려가 더 큰 기쁨으로 돌아온다는 걸 배웁니다.";
 
 const sectionOrder = ["character", "style", "story"];
 const storyFieldOrder = ["background", "moral", "length"];
@@ -241,6 +245,12 @@ function cycleId(options, currentId, direction) {
 }
 
 function buildPlot(selection) {
+  if (selection?.character === "lulu") {
+    return luluFixedPlot;
+  }
+  if (selection?.character === "yoshi") {
+    return yoshiFixedPlot;
+  }
   const character = pickLabel(characters, selection.character);
   const style = pickLabel(styles, selection.style);
   const background = pickLabel(backgrounds, selection.background);
@@ -313,6 +323,8 @@ export default function App() {
   const speech3AudioRef = useRef(null);
   const speech4AudioRef = useRef(null);
   const playerVideo1BrightAudioRef = useRef(null);
+  const yoshiSequenceVideoRef = useRef(null);
+  const yoshiSequenceBrightAudioRef = useRef(null);
   const openingPlaybackRef = useRef(null);
   const nextButtonRef = useRef(null);
   const nextActionLockRef = useRef(false);
@@ -439,6 +451,16 @@ export default function App() {
 
   function stopPlayerVideo1BrightAudio() {
     const audio = playerVideo1BrightAudioRef.current;
+    if (!audio) {
+      return;
+    }
+    audio.pause();
+    audio.currentTime = 0;
+    audio.volume = 1;
+  }
+
+  function stopYoshiSequenceBrightAudio() {
+    const audio = yoshiSequenceBrightAudioRef.current;
     if (!audio) {
       return;
     }
@@ -822,8 +844,10 @@ export default function App() {
       if (yoshiSequence.active) {
         if (key === "Enter" || key === "Escape" || key === " ") {
           if (yoshiSequence.mode === "video") {
+            stopYoshiSequenceBrightAudio();
             setYoshiSequence({ active: true, mode: "image" });
           } else {
+            stopYoshiSequenceBrightAudio();
             setYoshiSequence({ active: false, mode: "video" });
             // Actually proceed to player after the sequence
             completeYoshiTransition();
@@ -1210,6 +1234,20 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
+    if (!yoshiSequence.active || yoshiSequence.mode !== "video") {
+      stopYoshiSequenceBrightAudio();
+      return;
+    }
+    const audio = yoshiSequenceBrightAudioRef.current;
+    if (!audio) {
+      return;
+    }
+    audio.volume = 1;
+    audio.currentTime = 0;
+    void audio.play().catch(() => {});
+  }, [yoshiSequence.active, yoshiSequence.mode]);
+
+  useEffect(() => {
     if (screen !== "player") {
       stopSpeechAudios();
     }
@@ -1271,6 +1309,7 @@ export default function App() {
       }
       stopSpeechAudios();
       stopPlayerVideo1BrightAudio();
+      stopYoshiSequenceBrightAudio();
     };
   }, []);
 
@@ -1293,6 +1332,28 @@ export default function App() {
     const remain = video.duration - video.currentTime;
     if (remain <= 1) {
       audio.volume = Math.max(0, Math.min(1, remain / 1));
+    } else {
+      audio.volume = 1;
+    }
+  }
+
+  function handleYoshiSequenceVideoTimeUpdate() {
+    const video = yoshiSequenceVideoRef.current;
+    const audio = yoshiSequenceBrightAudioRef.current;
+    if (!video || !audio) {
+      return;
+    }
+    if (!Number.isFinite(video.duration) || video.duration <= 0) {
+      return;
+    }
+
+    if (!audio.paused && Math.abs(audio.currentTime - video.currentTime) > 0.25) {
+      audio.currentTime = Math.max(0, video.currentTime);
+    }
+
+    const remain = video.duration - video.currentTime;
+    if (remain <= 1.5) {
+      audio.volume = Math.max(0, Math.min(1, remain / 1.5));
     } else {
       audio.volume = 1;
     }
@@ -1345,8 +1406,10 @@ export default function App() {
             className="loading-overlay yoshi-sequence-overlay"
             onClick={() => {
               if (yoshiSequence.mode === "video") {
+                stopYoshiSequenceBrightAudio();
                 setYoshiSequence({ active: true, mode: "image" });
               } else {
+                stopYoshiSequenceBrightAudio();
                 setYoshiSequence({ active: false, mode: "video" });
                 // Actually proceed to player after the sequence
                 completeYoshiTransition();
@@ -1355,10 +1418,15 @@ export default function App() {
           >
             {yoshiSequence.mode === "video" ? (
               <video
+                ref={yoshiSequenceVideoRef}
                 src={yoshiStartClip}
                 autoPlay
                 playsInline
-                onEnded={() => setYoshiSequence({ active: true, mode: "image" })}
+                onTimeUpdate={handleYoshiSequenceVideoTimeUpdate}
+                onEnded={() => {
+                  stopYoshiSequenceBrightAudio();
+                  setYoshiSequence({ active: true, mode: "image" });
+                }}
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             ) : (
@@ -1368,6 +1436,7 @@ export default function App() {
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             )}
+            <audio ref={yoshiSequenceBrightAudioRef} src={openingBrightAudio} preload="auto" />
           </div>
         )}
         {showFinalConfirm && (
