@@ -10,6 +10,7 @@ import {
   Check,
   ChevronRight,
   House,
+  Lock,
   RefreshCw,
   Sparkles
 } from "lucide-react";
@@ -26,20 +27,59 @@ import storyVideo4 from "./assets/story/video_4.mp4";
 const carrotSceneAssets = [storyScene1, storyScene2, storyScene3, storyScene4];
 const carrotVideoAssets = [storyVideo1, storyVideo2, storyVideo3, storyVideo4];
 
-const sectionOrder = ["voice", "character", "story"];
+const sectionOrder = ["character", "story"];
 const storyFieldOrder = ["background", "moral", "length"];
 
-const voices = [
-  { id: "mom", label: "따뜻한 엄마 목소리", desc: "부드럽고 안정적인 읽기 톤" },
-  { id: "friend", label: "밝은 친구 목소리", desc: "경쾌하고 반응이 빠른 톤" },
-  { id: "narrator", label: "차분한 내레이터", desc: "발음이 또렷한 설명형 톤" },
-  { id: "grandpa", label: "할아버지 이야기꾼", desc: "느긋하고 포근한 고전 톤" }
-];
-
 const characters = [
-  { id: "lulu", label: "토끼 루루", trait: "호기심 많고 빠른 주인공", avatar: "루" },
-  { id: "popo", label: "꼬마 용 포포", trait: "겁은 많지만 따뜻한 친구", avatar: "포" },
-  { id: "mio", label: "우주 고양이 미오", trait: "상상력이 풍부한 탐험가", avatar: "미" }
+  {
+    id: "lulu",
+    label: "토끼 루루",
+    initial: "루",
+    tagline: "호기심 많고 빠른 주인공",
+    description:
+      "당근밭 너머 세상이 궁금한 어린 토끼. 작은 발자국으로 큰 모험을 만듭니다.",
+    tags: ["호기심", "빠름", "친구사랑"],
+    thumbnail: null,
+    accent: "#ffb3c1",
+    locked: false
+  },
+  {
+    id: "popo",
+    label: "꼬마 용 포포",
+    initial: "포",
+    tagline: "겁은 많지만 따뜻한 친구",
+    description:
+      "처음엔 망설여도 친구를 위해선 누구보다 먼저 달려가는 용감한 마음의 꼬마 용.",
+    tags: ["따뜻함", "용기", "신중함"],
+    thumbnail: null,
+    accent: "#ffd166",
+    locked: false
+  },
+  {
+    id: "mio",
+    label: "우주 고양이 미오",
+    initial: "미",
+    tagline: "상상력이 풍부한 탐험가",
+    description:
+      "별과 별 사이를 떠다니며 새로운 이야기를 모으는 호기심 가득한 우주 여행자.",
+    tags: ["상상력", "차분함", "탐험"],
+    thumbnail: null,
+    accent: "#a0c4ff",
+    locked: false
+  },
+  {
+    id: "yoshi",
+    label: "요시",
+    initial: "요",
+    tagline: "버섯 왕국의 든든한 동료",
+    description:
+      "긴 혀와 따뜻한 마음으로 어떤 모험에서도 친구를 지켜주는 초록빛 공룡 친구.",
+    tags: ["용감함", "든든함", "스페셜"],
+    thumbnail: null,
+    accent: "#7ed957",
+    locked: true,
+    premium: true
+  }
 ];
 
 const backgrounds = [
@@ -76,7 +116,6 @@ const libraryStories = [
     character: "lulu",
     moral: "teamwork",
     length: "p6",
-    voice: "mom",
     image: rabbitThumb
   },
   {
@@ -87,7 +126,6 @@ const libraryStories = [
     character: "popo",
     moral: "promise",
     length: "p4",
-    voice: "narrator",
     image: hbnb
   },
   {
@@ -98,7 +136,6 @@ const libraryStories = [
     character: "mio",
     moral: "respect",
     length: "p8",
-    voice: "friend",
     image: spaceCat
   }
 ];
@@ -119,7 +156,6 @@ const fieldLabel = {
 };
 
 const initialSelection = {
-  voice: "mom",
   character: "lulu",
   background: "forest",
   moral: "res",
@@ -142,7 +178,6 @@ function buildPlot(selection) {
   const character = pickLabel(characters, selection.character);
   const background = pickLabel(backgrounds, selection.background);
   const moral = pickLabel(morals, selection.moral);
-  const voice = pickLabel(voices, selection.voice);
   const length = pickLabel(lengths, selection.length);
   const endings = [
     "마지막 장면에서 모두가 하늘을 올려다보며 미소를 나눕니다.",
@@ -150,7 +185,7 @@ function buildPlot(selection) {
     "끝에서는 친구들이 서로의 다름을 응원하며 손을 맞잡습니다."
   ];
   const ending = endings[Math.floor(Math.random() * endings.length)];
-  return `${character}는 ${background}에서 신비한 신호를 발견하고 ${moral}를 배우는 모험을 시작해요. ${voice}로 이야기가 진행되고, ${length} 구성으로 장면이 차분하게 확장됩니다. ${ending}`;
+  return `${character}는 ${background}에서 신비한 신호를 발견하고 ${moral}를 배우는 모험을 시작해요. ${length} 구성으로 장면이 차분하게 확장됩니다. ${ending}`;
 }
 
 function buildLines(selection) {
@@ -189,8 +224,11 @@ export default function App() {
   const [landingZone, setLandingZone] = useState("actions");
   const [libraryFocus, setLibraryFocus] = useState(0);
   const [libraryZone, setLibraryZone] = useState("cards");
-  const [section, setSection] = useState("voice");
+  const [section, setSection] = useState("character");
   const [storyField, setStoryField] = useState("background");
+  const [focusedCharacter, setFocusedCharacter] = useState(initialSelection.character);
+  const [characterFocusZone, setCharacterFocusZone] = useState("grid");
+  const [lockNoticeShake, setLockNoticeShake] = useState(0);
   const [confirmFocus, setConfirmFocus] = useState("ok");
   const [selection, setSelection] = useState(initialSelection);
   const [generatedPlot, setGeneratedPlot] = useState(buildPlot(initialSelection));
@@ -218,7 +256,6 @@ export default function App() {
 
   const summary = useMemo(
     () => [
-      `보이스: ${pickLabel(voices, selection.voice)}`,
       `캐릭터: ${pickLabel(characters, selection.character)}`,
       `배경: ${pickLabel(backgrounds, selection.background)}`,
       `교훈: ${pickLabel(morals, selection.moral)}`,
@@ -226,6 +263,9 @@ export default function App() {
     ],
     [selection]
   );
+
+  const focusedChar =
+    characters.find((char) => char.id === focusedCharacter) || characters[0];
 
   const progressPercent =
     playback.lines.length > 0
@@ -300,8 +340,39 @@ export default function App() {
   }
 
   function openCreate() {
-    setSection("voice");
+    setSection("character");
+    setFocusedCharacter(selection.character);
+    setCharacterFocusZone("grid");
     navigateTo("create");
+  }
+
+  function pickCharacter(char) {
+    if (char.locked) {
+      setFocusedCharacter(char.id);
+      setLockNoticeShake((v) => v + 1);
+      return;
+    }
+    setFocusedCharacter(char.id);
+    setSelection((prev) => ({ ...prev, character: char.id }));
+  }
+
+  function moveCharacterFocus(direction) {
+    const cols = 4;
+    const idx = characters.findIndex((c) => c.id === focusedCharacter);
+    const safeIdx = idx === -1 ? 0 : idx;
+    const row = Math.floor(safeIdx / cols);
+    const col = safeIdx % cols;
+    const lastRow = Math.floor((characters.length - 1) / cols);
+
+    let nextRow = row;
+    let nextCol = col;
+    if (direction === "left") nextCol = Math.max(0, col - 1);
+    else if (direction === "right") nextCol = Math.min(cols - 1, col + 1);
+    else if (direction === "up") nextRow = Math.max(0, row - 1);
+    else if (direction === "down") nextRow = Math.min(lastRow, row + 1);
+
+    const nextIdx = Math.min(characters.length - 1, nextRow * cols + nextCol);
+    setFocusedCharacter(characters[nextIdx].id);
   }
 
   function setNextSection() {
@@ -612,31 +683,62 @@ export default function App() {
           }
           handled = true;
         } else if (key === "ArrowLeft") {
-          if (section === "story" && storyFieldIndex > 0) {
+          if (section === "character") {
+            if (characterFocusZone === "grid") {
+              moveCharacterFocus("left");
+            }
+          } else if (section === "story" && storyFieldIndex > 0) {
             setStoryField(storyFieldOrder[storyFieldIndex - 1]);
           } else if (sectionIndex > 0) {
             setSection(sectionOrder[sectionIndex - 1]);
           }
           handled = true;
         } else if (key === "ArrowRight") {
-          if (section === "story" && storyFieldIndex < storyFieldOrder.length - 1) {
+          if (section === "character") {
+            if (characterFocusZone === "grid") {
+              moveCharacterFocus("right");
+            }
+          } else if (section === "story" && storyFieldIndex < storyFieldOrder.length - 1) {
             setStoryField(storyFieldOrder[storyFieldIndex + 1]);
           } else if (sectionIndex < sectionOrder.length - 1) {
             setSection(sectionOrder[sectionIndex + 1]);
           }
           handled = true;
         } else if (key === "ArrowUp" || key === "ArrowDown") {
-          const direction = key === "ArrowDown" ? 1 : -1;
-          if (section === "voice") {
-            cycleSelection("voice", voices, direction);
-          } else if (section === "character") {
-            cycleSelection("character", characters, direction);
+          if (section === "character") {
+            if (key === "ArrowDown") {
+              if (characterFocusZone === "grid") {
+                const cols = 4;
+                const idx = characters.findIndex((c) => c.id === focusedCharacter);
+                const safeIdx = idx === -1 ? 0 : idx;
+                const row = Math.floor(safeIdx / cols);
+                const lastRow = Math.floor((characters.length - 1) / cols);
+                if (row === lastRow) {
+                  setCharacterFocusZone("footer");
+                } else {
+                  moveCharacterFocus("down");
+                }
+              }
+            } else {
+              if (characterFocusZone === "footer") {
+                setCharacterFocusZone("grid");
+              } else {
+                moveCharacterFocus("up");
+              }
+            }
           } else {
+            const direction = key === "ArrowDown" ? 1 : -1;
             cycleSelection(storyField, storyOptions[storyField], direction);
           }
           handled = true;
         } else if (key === "Enter") {
-          if (section === "story") {
+          if (section === "character") {
+            if (characterFocusZone === "footer") {
+              setNextSection();
+            } else {
+              pickCharacter(focusedChar);
+            }
+          } else if (section === "story") {
             generatePreview();
           } else {
             setNextSection();
@@ -726,7 +828,9 @@ export default function App() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
+    characterFocusZone,
     confirmFocus,
+    focusedCharacter,
     landingActions,
     landingActionFocus,
     landingStoryFocus,
@@ -1007,13 +1111,6 @@ export default function App() {
               <div className="create-tabs">
                 <button
                   type="button"
-                  className={section === "voice" ? "active" : ""}
-                  onClick={() => setSection("voice")}
-                >
-                  보이스
-                </button>
-                <button
-                  type="button"
                   className={section === "character" ? "active" : ""}
                   onClick={() => setSection("character")}
                 >
@@ -1031,45 +1128,85 @@ export default function App() {
 
             <div className="create-body">
               <section className="option-area">
-                {section === "voice" && (
-                  <div className="option-list">
-                    {voices.map((voice) => (
-                      <button
-                        key={voice.id}
-                        type="button"
-                        className={selection.voice === voice.id ? "selected" : ""}
-                        onClick={() =>
-                          setSelection((prev) => ({ ...prev, voice: voice.id }))
-                        }
-                      >
-                        <strong>{voice.label}</strong>
-                        <small>{voice.desc}</small>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
                 {section === "character" && (
-                  <div className="character-list">
-                    {characters.map((character) => (
-                      <button
-                        key={character.id}
-                        type="button"
-                        className={selection.character === character.id ? "selected" : ""}
-                        onClick={() =>
-                          setSelection((prev) => ({
-                            ...prev,
-                            character: character.id
-                          }))
-                        }
-                      >
-                        <div className="avatar">{character.avatar}</div>
-                        <div className="character-copy">
-                          <strong>{character.label}</strong>
-                          <small>{character.trait}</small>
+                  <div className="character-screen">
+                    <div className="character-grid">
+                      {characters.map((character) => {
+                        const isSelected = selection.character === character.id;
+                        const isFocused = focusedCharacter === character.id;
+                        const classes = [
+                          "character-card",
+                          isSelected ? "selected" : "",
+                          isFocused ? "focused" : "",
+                          character.locked ? "locked" : ""
+                        ]
+                          .filter(Boolean)
+                          .join(" ");
+                        return (
+                          <button
+                            key={character.id}
+                            type="button"
+                            className={classes}
+                            style={{ "--accent": character.accent }}
+                            onMouseEnter={() => {
+                              setFocusedCharacter(character.id);
+                              setCharacterFocusZone("grid");
+                            }}
+                            onFocus={() => {
+                              setFocusedCharacter(character.id);
+                              setCharacterFocusZone("grid");
+                            }}
+                            onClick={() => pickCharacter(character)}
+                          >
+                            {character.locked && (
+                              <span className="lock-badge">
+                                <Lock size={12} />
+                                <span>PRO</span>
+                              </span>
+                            )}
+                            {character.thumbnail ? (
+                              <img
+                                className="character-thumb"
+                                src={character.thumbnail}
+                                alt={character.label}
+                              />
+                            ) : (
+                              <div
+                                className="character-thumb fallback"
+                                style={{
+                                  background: `linear-gradient(135deg, ${character.accent}, #ffffff)`
+                                }}
+                              >
+                                {character.initial}
+                              </div>
+                            )}
+                            <span className="character-card-name">{character.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <aside className="character-detail">
+                      {focusedChar.locked && (
+                        <div
+                          key={lockNoticeShake}
+                          className="lock-banner"
+                        >
+                          <Lock size={14} />
+                          <span>프리미엄 캐릭터입니다 — 곧 만나요!</span>
                         </div>
-                      </button>
-                    ))}
+                      )}
+                      <h3 className="character-detail-name">{focusedChar.label}</h3>
+                      <p className="character-detail-tagline">"{focusedChar.tagline}"</p>
+                      <div className="character-tags">
+                        {focusedChar.tags.map((tag) => (
+                          <span key={tag} className="tag-chip">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="character-detail-desc">{focusedChar.description}</p>
+                    </aside>
                   </div>
                 )}
 
@@ -1125,7 +1262,16 @@ export default function App() {
 
             <div className="create-foot">
               {section !== "story" ? (
-                <button className="primary-btn" type="button" onClick={setNextSection}>
+                <button
+                  className={`primary-btn ${
+                    section === "character" && characterFocusZone === "footer" ? "focused" : ""
+                  }`}
+                  type="button"
+                  onMouseEnter={() => {
+                    if (section === "character") setCharacterFocusZone("footer");
+                  }}
+                  onClick={setNextSection}
+                >
                   <span>다음 단계</span>
                   <ChevronRight size={18} />
                 </button>
