@@ -216,14 +216,16 @@ button {
 .mini-stories {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 24px;
 }
 
 .mini-story {
-  min-height: 72px;
+  min-height: 144px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(12, 17, 24, 0.72);
+  background: rgba(12, 17, 24, 0.5);
+  background-size: cover;
+  background-position: center;
   color: #f4f8ff;
   text-align: left;
   padding: 12px;
@@ -295,7 +297,7 @@ button {
 .library-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 24px;
 }
 
 .library-card {
