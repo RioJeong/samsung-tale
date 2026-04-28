@@ -160,6 +160,7 @@ function makeTitle(selection) {
 export default function App() {
   const [bgIndex, setBgIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const bgImages = [mario, pawPatrol, zootopia, mario, pawPatrol];
 
 
@@ -282,9 +283,13 @@ export default function App() {
   }
 
   function generatePreview() {
-    setGeneratedPlot(buildPlot(selection));
-    setConfirmFocus("ok");
-    navigateTo("confirm");
+    setIsGenerating(true);
+    setTimeout(() => {
+      setGeneratedPlot(buildPlot(selection));
+      setConfirmFocus("ok");
+      setIsGenerating(false);
+      navigateTo("confirm");
+    }, 3000);
   }
 
   function triggerPlayerSpaceAction() {
@@ -682,6 +687,12 @@ export default function App() {
       </header>
 
       <main className="tv-shell">
+        {isGenerating && (
+          <div className="loading-overlay">
+            <div className="spinner"></div>
+            <p>Gemini가 이야기를 만들고 있어요...</p>
+          </div>
+        )}
         {screen === "opening" && (
           <section className="screen opening-screen">
             <video
