@@ -4,11 +4,12 @@ import {
   Check,
   ChevronRight,
   House,
-  Pause,
-  Play,
   RefreshCw,
   Sparkles
 } from "lucide-react";
+import subtitleSceneImage from "./assets/subtitle-scene.png";
+import firstSceneVideo from "./assets/first-scene.mp4";
+import openingIntroVideo from "./assets/opening-intro.mp4";
 
 const sectionOrder = ["voice", "character", "story"];
 const storyFieldOrder = ["background", "moral", "length"];
@@ -50,8 +51,8 @@ const lengths = [
 const libraryStories = [
   {
     id: "s1",
-    title: "토끼 루루의 숲속 모험",
-    progress: "42%",
+    title: "꼬마토끼의 반쪽당근",
+    progress: "0%",
     background: "forest",
     character: "lulu",
     moral: "teamwork",
@@ -81,6 +82,7 @@ const libraryStories = [
 ];
 
 const screenLabel = {
+  opening: "오프닝",
   landing: "홈",
   library: "동화 읽기",
   create: "동화 만들기",
@@ -130,14 +132,8 @@ function buildPlot(selection) {
 }
 
 function buildLines(selection) {
-  const character = pickLabel(characters, selection.character);
-  const background = pickLabel(backgrounds, selection.background);
-  const moral = pickLabel(morals, selection.moral);
   return [
-    `${character}는 ${background} 입구에서 반짝이는 지도를 주웠어요.`,
-    "길을 막은 수수께끼 앞에서 친구들은 숨을 고르고 지혜를 모았어요.",
-    `${moral}를 떠올린 순간, 닫혀 있던 문이 조용히 열렸어요.`,
-    `해가 기울 무렵 ${character}는 오늘의 모험을 환하게 이야기했답니다.`
+    "꼬마토끼가 주황색 당근을 가지고 걸어가다 엉엉 울고 있는 곰을 만났어요."
   ];
 }
 
@@ -161,13 +157,21 @@ export default function App() {
   const [selection, setSelection] = useState(initialSelection);
   const [generatedPlot, setGeneratedPlot] = useState(buildPlot(initialSelection));
   const historyRef = useRef([]);
+  const videoRef = useRef(null);
+  const openingVideoRef = useRef(null);
+  const openingPlaybackRef = useRef(null);
+  const nextButtonRef = useRef(null);
   const [playback, setPlayback] = useState({
     title: makeTitle(initialSelection),
     background: initialSelection.background,
     character: initialSelection.character,
     lines: buildLines(initialSelection),
     lineIndex: 0,
-    playing: true
+    playing: false,
+    subtitleEnabled: false,
+    subtitleWordIndex: -1,
+    videoStarted: false,
+    videoEnded: false
   });
 
   const summary = useMemo(
@@ -187,7 +191,14 @@ export default function App() {
       : 0;
 
   const currentLine = playback.lines[playback.lineIndex] || "";
-  const nextLine = playback.lines[playback.lineIndex + 1] || "이야기가 마무리됩니다.";
+  const nextLine = playback.lines[playback.lineIndex + 1] || "";
+  const currentWords = currentLine.split(" ").filter(Boolean);
+  const showSubtitleScene = !playback.videoStarted;
+  const showVideoScene = playback.videoStarted;
+  const isCarrotStoryTitle = playback.title === "꼬마토끼의 반쪽당근";
+  const highlightedWordIndex = playback.subtitleEnabled
+    ? Math.min(playback.subtitleWordIndex, currentWords.length - 1)
+    : -1;
 
   const landingActions = [
     {
@@ -205,6 +216,17 @@ export default function App() {
   ];
 
   function openLanding() {
+    openingPlaybackRef.current = null;
+    setScreen("landing");
+  }
+
+  function finishOpening() {
+    if (openingPlaybackRef.current) {
+      setPlayback(openingPlaybackRef.current);
+      openingPlaybackRef.current = null;
+      setScreen("player");
+      return;
+    }
     setScreen("landing");
   }
 
@@ -247,6 +269,25 @@ export default function App() {
     navigateTo("confirm");
   }
 
+  function triggerPlayerSpaceAction() {
+    setPlayback((prev) => {
+      if (!prev.subtitleEnabled) {
+        return {
+          ...prev,
+          subtitleEnabled: true,
+          subtitleWordIndex: 0,
+          videoStarted: false,
+          playing: false,
+          videoEnded: false
+        };
+      }
+      if (!prev.videoStarted) {
+        return { ...prev, videoStarted: true, playing: true, videoEnded: false };
+      }
+      return { ...prev, playing: !prev.playing };
+    });
+  }
+
   function startPlayerFromSelection() {
     setPlayback({
       title: makeTitle(selection),
@@ -254,21 +295,37 @@ export default function App() {
       character: selection.character,
       lines: buildLines(selection),
       lineIndex: 0,
-      playing: true
+      playing: false,
+      subtitleEnabled: false,
+      subtitleWordIndex: -1,
+      videoStarted: false,
+      videoEnded: false
     });
     navigateTo("player");
   }
 
   function startPlayerFromLibrary(index) {
     const story = libraryStories[index];
-    setPlayback({
+    const storyPlayback = {
       title: story.title,
       background: story.background,
       character: story.character,
       lines: buildLines(story),
       lineIndex: 0,
-      playing: true
-    });
+      playing: false,
+      subtitleEnabled: false,
+      subtitleWordIndex: -1,
+      videoStarted: false,
+      videoEnded: false
+    };
+
+    if (story.id === "s1") {
+      openingPlaybackRef.current = storyPlayback;
+      navigateTo("opening");
+      return;
+    }
+
+    setPlayback(storyPlayback);
     navigateTo("player");
   }
 
@@ -289,7 +346,12 @@ export default function App() {
       let handled = false;
       const key = event.key;
 
-      if (screen === "landing") {
+      if (screen === "opening") {
+        if (key === " " || key === "Enter" || key === "Escape") {
+          finishOpening();
+          handled = true;
+        }
+      } else if (screen === "landing") {
         if (key === "ArrowLeft") {
           if (landingZone === "actions") {
             setLandingActionFocus((prev) => Math.max(0, prev - 1));
@@ -447,19 +509,24 @@ export default function App() {
           handled = true;
         }
       } else if (screen === "player") {
-        if (key === " " || key === "Enter") {
-          setPlayback((prev) => ({ ...prev, playing: !prev.playing }));
+        if (playback.videoEnded && key === "Enter") {
+          openLanding();
+          handled = true;
+        } else if (key === " " || key === "Enter") {
+          triggerPlayerSpaceAction();
           handled = true;
         } else if (key === "ArrowLeft") {
           setPlayback((prev) => ({
             ...prev,
-            lineIndex: Math.max(0, prev.lineIndex - 1)
+            lineIndex: Math.max(0, prev.lineIndex - 1),
+            subtitleWordIndex: prev.subtitleEnabled ? 0 : -1
           }));
           handled = true;
         } else if (key === "ArrowRight") {
           setPlayback((prev) => ({
             ...prev,
-            lineIndex: Math.min(prev.lines.length - 1, prev.lineIndex + 1)
+            lineIndex: Math.min(prev.lines.length - 1, prev.lineIndex + 1),
+            subtitleWordIndex: prev.subtitleEnabled ? 0 : -1
           }));
           handled = true;
         } else if (key === "Escape" || key === "Backspace") {
@@ -490,25 +557,62 @@ export default function App() {
     screen,
     section,
     selection,
-    storyField
+    storyField,
+    playback.videoEnded
   ]);
 
   useEffect(() => {
-    if (screen !== "player" || !playback.playing) {
-      return undefined;
+    if (screen !== "opening") {
+      return;
+    }
+    const openingVideo = openingVideoRef.current;
+    if (!openingVideo) {
+      return;
+    }
+    void openingVideo.play();
+  }, [screen]);
+
+  useEffect(() => {
+    if (screen !== "player" || !playback.subtitleEnabled || playback.videoStarted) {
+      return;
     }
 
     const timer = window.setInterval(() => {
       setPlayback((prev) => {
-        if (prev.lineIndex >= prev.lines.length - 1) {
-          return { ...prev, playing: false };
+        const words = (prev.lines[prev.lineIndex] || "").split(" ").filter(Boolean);
+        if (words.length === 0 || prev.subtitleWordIndex >= words.length - 1) {
+          return prev;
         }
-        return { ...prev, lineIndex: prev.lineIndex + 1 };
+        return { ...prev, subtitleWordIndex: prev.subtitleWordIndex + 1 };
       });
-    }, 2600);
+    }, 340);
 
     return () => window.clearInterval(timer);
-  }, [playback.playing, screen]);
+  }, [playback.subtitleEnabled, playback.videoStarted, screen]);
+
+  useEffect(() => {
+    if (screen !== "player") {
+      return;
+    }
+
+    const video = videoRef.current;
+    if (!video || !playback.videoStarted) {
+      return;
+    }
+
+    if (playback.playing) {
+      void video.play();
+    } else {
+      video.pause();
+    }
+  }, [playback.playing, playback.videoStarted, screen]);
+
+  useEffect(() => {
+    if (screen !== "player" || !playback.videoEnded) {
+      return;
+    }
+    nextButtonRef.current?.focus();
+  }, [playback.videoEnded, screen]);
 
   return (
     <div className={`app screen-${screen}`}>
@@ -540,6 +644,20 @@ export default function App() {
       </header>
 
       <main className="tv-shell">
+        {screen === "opening" && (
+          <section className="screen opening-screen">
+            <video
+              ref={openingVideoRef}
+              className="opening-video"
+              src={openingIntroVideo}
+              autoPlay
+              muted
+              playsInline
+              onEnded={finishOpening}
+            />
+          </section>
+        )}
+
         {screen === "landing" && (
           <section className="screen landing-screen">
             <div className="landing-hero">
@@ -824,37 +942,73 @@ export default function App() {
         )}
 
         {screen === "player" && (
-          <section className={`screen player-screen cover-${playback.background}`}>
-            <div className={`player-character char-${playback.character}`}>
-              {pickLabel(characters, playback.character).slice(0, 1)}
-            </div>
+          <section
+            className={`screen player-screen ${
+              showSubtitleScene || showVideoScene
+                ? "media-scene"
+                : `cover-${playback.background}`
+            }`}
+          >
+            {showSubtitleScene && (
+              <img className="player-scene-image" src={subtitleSceneImage} alt="" />
+            )}
+            {showVideoScene && (
+              <video
+                ref={videoRef}
+                className="player-video"
+                src={firstSceneVideo}
+                playsInline
+                onEnded={() => {
+                  setPlayback((prev) => ({ ...prev, playing: false, videoEnded: true }));
+                }}
+              />
+            )}
+            {!showSubtitleScene && !showVideoScene && (
+              <div className={`player-character char-${playback.character}`}>
+                {pickLabel(characters, playback.character).slice(0, 1)}
+              </div>
+            )}
             <div className="player-content">
               <div className="player-title">
-                <strong>{playback.title}</strong>
+                <strong className={isCarrotStoryTitle ? "story-title-fancy" : ""}>
+                  {isCarrotStoryTitle ? (
+                    <span aria-label={playback.title}>
+                      {Array.from(playback.title).map((char, index) => (
+                        <span key={`${char}-${index}`} className="story-title-char">
+                          {char === " " ? "\u00A0" : char}
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    playback.title
+                  )}
+                </strong>
                 <span>
                   {playback.lineIndex + 1} / {playback.lines.length}
                 </span>
               </div>
               <div className="caption-box">
-                <p className="caption-current">{currentLine}</p>
-                <p className="caption-next">{nextLine}</p>
-              </div>
-              <div className="progress-track">
-                <span style={{ width: `${progressPercent}%` }} />
-              </div>
-              <div className="player-controls">
+                <p className="caption-current">
+                  {currentWords.map((word, index) => (
+                    <span
+                      key={`${word}-${index}`}
+                      className={`caption-word ${
+                        index <= highlightedWordIndex ? "active" : ""
+                      }`}
+                    >
+                      {index > 0 ? " " : ""}
+                      {word}
+                    </span>
+                  ))}
+                </p>
+                {nextLine && <p className="caption-next">{nextLine}</p>}
                 <button
-                  className="icon-btn"
+                  ref={nextButtonRef}
+                  className={`dialog-next-btn ${playback.videoEnded ? "focused" : ""}`}
                   type="button"
-                  onClick={() =>
-                    setPlayback((prev) => ({ ...prev, playing: !prev.playing }))
-                  }
-                  aria-label="재생 제어"
+                  onClick={openLanding}
                 >
-                  {playback.playing ? <Pause size={18} /> : <Play size={18} />}
-                </button>
-                <button className="icon-btn" type="button" onClick={openLanding} aria-label="홈">
-                  <House size={18} />
+                  다음으로
                 </button>
               </div>
             </div>
