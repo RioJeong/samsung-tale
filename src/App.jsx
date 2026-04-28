@@ -32,6 +32,8 @@ import luluThumb from "./assets/characters/ruru.png";
 import mioThumb from "./assets/characters/mio.png";
 import rumiThumb from "./assets/characters/rumi.png";
 import yoshiThumb from "./assets/characters/yoshi.png";
+import yoshiStartClip from "./assets/story/yoshi-start-clip.mp4";
+import yoshiStartImg from "./assets/story/yoshi-start.png";
 
 const carrotSteps = [
   {
@@ -278,6 +280,7 @@ export default function App() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCreatingFullStory, setIsCreatingFullStory] = useState(false);
+  const [yoshiSequence, setYoshiSequence] = useState({ active: false, mode: "video" });
   const [showFinalConfirm, setShowFinalConfirm] = useState(false);
   const bgImages = [mario, pawPatrol, zootopia, mario, pawPatrol];
 
@@ -722,6 +725,15 @@ export default function App() {
     setShowFinalConfirm(false);
     stopSpeechAudios();
 
+    if (selection.character === "yoshi") {
+      setYoshiSequence({ active: true, mode: "video" });
+      return;
+    }
+
+    completeYoshiTransition();
+  }
+
+  function completeYoshiTransition() {
     if (selection.character === "lulu") {
       const luluStory = libraryStories.find((story) => story.id === "s1");
       if (luluStory) {
@@ -806,6 +818,23 @@ export default function App() {
 
       let handled = false;
       const key = event.key;
+
+      if (yoshiSequence.active) {
+        if (key === "Enter" || key === "Escape" || key === " ") {
+          if (yoshiSequence.mode === "video") {
+            setYoshiSequence({ active: true, mode: "image" });
+          } else {
+            setYoshiSequence({ active: false, mode: "video" });
+            // Actually proceed to player after the sequence
+            completeYoshiTransition();
+          }
+          handled = true;
+        }
+        if (handled) {
+          event.preventDefault();
+        }
+        return;
+      }
 
       if (proConfirm.open) {
         if (key === "Enter") {
@@ -1309,6 +1338,36 @@ export default function App() {
           <div className="loading-overlay">
             <div className="spinner"></div>
             <p>AI가 동화를 완성하고 있어요...</p>
+          </div>
+        )}
+        {yoshiSequence.active && (
+          <div
+            className="loading-overlay yoshi-sequence-overlay"
+            onClick={() => {
+              if (yoshiSequence.mode === "video") {
+                setYoshiSequence({ active: true, mode: "image" });
+              } else {
+                setYoshiSequence({ active: false, mode: "video" });
+                // Actually proceed to player after the sequence
+                completeYoshiTransition();
+              }
+            }}
+          >
+            {yoshiSequence.mode === "video" ? (
+              <video
+                src={yoshiStartClip}
+                autoPlay
+                playsInline
+                onEnded={() => setYoshiSequence({ active: true, mode: "image" })}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            ) : (
+              <img
+                src={yoshiStartImg}
+                alt="Yoshi Start"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            )}
           </div>
         )}
         {showFinalConfirm && (
