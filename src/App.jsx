@@ -87,7 +87,7 @@ const libraryStories = [
     progress: "100%",
     background: "space",
     character: "mio",
-    moral: "courage",
+    moral: "respect",
     length: "p8",
     voice: "friend",
     image: spaceCat
