@@ -10,9 +10,9 @@ import {
   RefreshCw,
   Sparkles
 } from "lucide-react";
-import subtitleSceneImage from "./assets/subtitle-scene.png";
-import firstSceneVideo from "./assets/first-scene.mp4";
-import openingIntroVideo from "./assets/opening-intro.mp4";
+import storyScene1 from "./assets/story/scene_1.png";
+import storyVideo0 from "./assets/story/video_0.mp4";
+import storyVideo1 from "./assets/story/video_1.mp4";
 
 const sectionOrder = ["voice", "character", "story"];
 const storyFieldOrder = ["background", "moral", "length"];
@@ -279,6 +279,12 @@ export default function App() {
 
   function triggerPlayerSpaceAction() {
     setPlayback((prev) => {
+      if (isCarrotStoryTitle) {
+        if (!prev.videoStarted) {
+          return { ...prev, videoStarted: true, playing: true, videoEnded: false };
+        }
+        return { ...prev, playing: !prev.playing };
+      }
       if (!prev.subtitleEnabled) {
         return {
           ...prev,
@@ -671,7 +677,7 @@ export default function App() {
             <video
               ref={openingVideoRef}
               className="opening-video"
-              src={openingIntroVideo}
+              src={storyVideo0}
               autoPlay
               muted
               playsInline
@@ -992,13 +998,13 @@ export default function App() {
             }`}
           >
             {showSubtitleScene && (
-              <img className="player-scene-image" src={subtitleSceneImage} alt="" />
+              <img className="player-scene-image" src={storyScene1} alt="" />
             )}
             {showVideoScene && (
               <video
                 ref={videoRef}
                 className="player-video"
-                src={firstSceneVideo}
+                src={storyVideo1}
                 playsInline
                 onEnded={() => {
                   setPlayback((prev) => ({ ...prev, playing: false, videoEnded: true }));
