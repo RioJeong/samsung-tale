@@ -34,6 +34,10 @@ import rumiThumb from "./assets/characters/rumi.png";
 import yoshiThumb from "./assets/characters/yoshi.png";
 import yoshiStartClip from "./assets/story/yoshi-start-clip.mp4";
 import yoshiStartImg from "./assets/story/yoshi-start.png";
+import default2dStyle from "./assets/styles/default_2d.png";
+import jibliStyle from "./assets/styles/jibli.png";
+import realStyle from "./assets/styles/real.png";
+import bhnStyle from "./assets/styles/bhn.png";
 
 const carrotSteps = [
   {
@@ -73,26 +77,28 @@ const styles = [
     tagline: "친숙하고 따뜻한 동화 일러스트",
     description:
       "동화책에서 자주 보는 부드러운 색감과 둥근 선의 일러스트 스타일. 어떤 이야기에도 잘 어울리는 기본값입니다.",
+    thumbnail: default2dStyle,
     swatch: "linear-gradient(135deg, #ffd6a5, #fdffb6 50%, #caffbf 75%, #9bf6ff)",
     locked: false
   },
   {
-    id: "cartoon",
-    label: "귀여운 카툰",
-    tagline: "밝고 발랄한 색감",
+    id: "ghibli",
+    label: "지브리 스타일",
+    tagline: "지브리 감성의 따뜻한 자연 풍경",
     description:
-      "선이 또렷하고 표정이 풍부한 카툰 스타일. 활기찬 모험 이야기에 잘 어울려요.",
-    swatch: "linear-gradient(135deg, #ff6b9d, #ffd93d 55%, #6bcfff)",
+      "스튜디오 지브리 풍의 부드러운 셀 애니메이션과 풍성한 자연 묘사. 모험과 일상이 교차하는 동화에 잘 어울려요.",
+    thumbnail: jibliStyle,
+    swatch: "linear-gradient(135deg, #b5d6c2, #f3e7c4 55%, #ddc3a3)",
     locked: false
   },
   {
-    id: "pixel",
-    label: "픽셀 아트",
-    tagline: "레트로 게임 감성",
+    id: "realistic",
+    label: "실사 스타일",
+    tagline: "사진처럼 생생한 실사 묘사",
     description:
-      "도트 한 점 한 점이 살아있는 8비트 게임 풍 그림. 모험과 퀘스트 분위기에 어울려요.",
-    swatch:
-      "repeating-linear-gradient(45deg, #2d3047 0 8px, #419d78 8px 16px, #e0a458 16px 24px, #fff3b0 24px 32px)",
+      "사진 같은 디테일과 빛 표현이 살아있는 실사 풍 일러스트. 자연 다큐나 사실적인 모험 이야기에 잘 어울려요.",
+    thumbnail: realStyle,
+    swatch: "linear-gradient(135deg, #2c3e50, #4a6572 55%, #c9b79c)",
     locked: false
   },
   {
@@ -101,6 +107,7 @@ const styles = [
     tagline: "손으로 빚은 인형의 입체 동화",
     description:
       "찰흙·천·종이로 만든 인형과 미니어처 무대를 사진으로 담아내는 따뜻한 입체 동화 스타일. 손맛이 살아있는 질감과 포근한 조명이 매력적입니다.",
+    thumbnail: bhnStyle,
     swatch:
       "radial-gradient(circle at 70% 25%, #fff4dd 0 22%, transparent 55%), linear-gradient(135deg, #d8a373 0%, #e9c46a 35%, #c98056 70%, #f5e6d3 100%)",
     locked: true,
@@ -1765,10 +1772,18 @@ export default function App() {
                                 <span>PRO</span>
                               </span>
                             )}
-                            <div
-                              className="style-swatch"
-                              style={{ backgroundImage: style.swatch }}
-                            />
+                            {style.thumbnail ? (
+                              <img
+                                className="style-swatch"
+                                src={style.thumbnail}
+                                alt={style.label}
+                              />
+                            ) : (
+                              <div
+                                className="style-swatch"
+                                style={{ backgroundImage: style.swatch }}
+                              />
+                            )}
                             <span className="character-card-name">{style.label}</span>
                           </button>
                         );
@@ -1784,10 +1799,18 @@ export default function App() {
                       )}
                       <h3 className="character-detail-name">{focusedStyleItem.label}</h3>
                       <p className="character-detail-tagline">"{focusedStyleItem.tagline}"</p>
-                      <div
-                        className="style-preview"
-                        style={{ backgroundImage: focusedStyleItem.swatch }}
-                      />
+                      {focusedStyleItem.thumbnail ? (
+                        <img
+                          className="style-preview"
+                          src={focusedStyleItem.thumbnail}
+                          alt={focusedStyleItem.label}
+                        />
+                      ) : (
+                        <div
+                          className="style-preview"
+                          style={{ backgroundImage: focusedStyleItem.swatch }}
+                        />
+                      )}
                       <p className="character-detail-desc">{focusedStyleItem.description}</p>
                     </aside>
                   </div>
