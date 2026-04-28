@@ -23,6 +23,10 @@ import storyVideo1 from "./assets/story/video_1.mp4";
 import storyVideo2 from "./assets/story/video_2.mp4";
 import storyVideo3 from "./assets/story/video_3.mp4";
 import storyVideo4 from "./assets/story/video_4.mp4";
+import luluThumb from "./assets/characters/ruru.png";
+import mioThumb from "./assets/characters/mio.png";
+import rumiThumb from "./assets/characters/rumi.png";
+import yoshiThumb from "./assets/characters/yoshi.png";
 
 const carrotSceneAssets = [storyScene1, storyScene2, storyScene3, storyScene4];
 const carrotVideoAssets = [storyVideo1, storyVideo2, storyVideo3, storyVideo4];
@@ -39,20 +43,8 @@ const characters = [
     description:
       "당근밭 너머 세상이 궁금한 어린 토끼. 작은 발자국으로 큰 모험을 만듭니다.",
     tags: ["호기심", "빠름", "친구사랑"],
-    thumbnail: null,
+    thumbnail: luluThumb,
     accent: "#ffb3c1",
-    locked: false
-  },
-  {
-    id: "popo",
-    label: "꼬마 용 포포",
-    initial: "포",
-    tagline: "겁은 많지만 따뜻한 친구",
-    description:
-      "처음엔 망설여도 친구를 위해선 누구보다 먼저 달려가는 용감한 마음의 꼬마 용.",
-    tags: ["따뜻함", "용기", "신중함"],
-    thumbnail: null,
-    accent: "#ffd166",
     locked: false
   },
   {
@@ -63,9 +55,22 @@ const characters = [
     description:
       "별과 별 사이를 떠다니며 새로운 이야기를 모으는 호기심 가득한 우주 여행자.",
     tags: ["상상력", "차분함", "탐험"],
-    thumbnail: null,
+    thumbnail: mioThumb,
     accent: "#a0c4ff",
     locked: false
+  },
+  {
+    id: "rumi",
+    label: "케이팝 스타, 루미",
+    initial: "루",
+    tagline: "무대 위에서는 화려한 퍼포머, 밤에는 악마를 쫓는 빛의 수호자.",
+    description:
+      "전 세계를 열광시키는 아이돌이지만, 사실은 리듬을 마력으로 변환해 악마를 퇴치하는 비밀스러운 데몬 헌터입니다. 마이크 대신 빛의 검을 휘두르며 오늘도 무대와 밤의 어둠 사이에서 균형을 지킵니다.",
+    tags: ["열정적", "당당함", "비밀스러운"],
+    thumbnail: rumiThumb,
+    accent: "#ff5d8f",
+    locked: true,
+    premium: true
   },
   {
     id: "yoshi",
@@ -75,7 +80,7 @@ const characters = [
     description:
       "긴 혀와 따뜻한 마음으로 어떤 모험에서도 친구를 지켜주는 초록빛 공룡 친구.",
     tags: ["용감함", "든든함", "스페셜"],
-    thumbnail: null,
+    thumbnail: yoshiThumb,
     accent: "#7ed957",
     locked: true,
     premium: true
@@ -123,7 +128,7 @@ const libraryStories = [
     title: "흥부 놀부",
     progress: "75%",
     background: "ocean",
-    character: "popo",
+    character: "lulu",
     moral: "promise",
     length: "p4",
     image: hbnb
