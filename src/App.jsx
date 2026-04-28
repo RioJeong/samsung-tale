@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import pawPatrol from "./assets/paw-patrol.png";
+import zootopia from "./assets/zootopia.png";
+import mario from "./assets/super-mario-galaxy-hero-16x9.jpg";
 import {
   BookOpen,
   Check,
@@ -145,6 +148,11 @@ function makeTitle(selection) {
 }
 
 export default function App() {
+  const [bgIndex, setBgIndex] = useState(1);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const bgImages = [mario, pawPatrol, zootopia, mario, pawPatrol];
+
+
   const [screen, setScreen] = useState("landing");
   const [landingActionFocus, setLandingActionFocus] = useState(0);
   const [landingStoryFocus, setLandingStoryFocus] = useState(0);
@@ -393,6 +401,18 @@ export default function App() {
             startPlayerFromLibrary(landingStoryFocus);
           }
           handled = true;
+        } else if (key === "b" || key === "B") {
+          if (!isTransitioning) {
+            setIsTransitioning(true);
+            setBgIndex((prev) => prev - 1);
+          }
+          handled = true;
+        } else if (key === "n" || key === "N") {
+          if (!isTransitioning) {
+            setIsTransitioning(true);
+            setBgIndex((prev) => prev + 1);
+          }
+          handled = true;
         }
       } else if (screen === "library") {
         if (key === "ArrowLeft") {
@@ -558,7 +578,9 @@ export default function App() {
     section,
     selection,
     storyField,
-    playback.videoEnded
+    playback.videoEnded,
+    isTransitioning,
+    bgImages.length
   ]);
 
   useEffect(() => {
@@ -660,6 +682,26 @@ export default function App() {
 
         {screen === "landing" && (
           <section className="screen landing-screen">
+            <div
+              className={`landing-bg-slider ${isTransitioning ? "" : "no-transition"}`}
+              style={{ transform: `translateX(-${bgIndex * 100}%)` }}
+              onTransitionEnd={() => {
+                setIsTransitioning(false);
+                if (bgIndex === 0) {
+                  setBgIndex(bgImages.length - 2);
+                } else if (bgIndex === bgImages.length - 1) {
+                  setBgIndex(1);
+                }
+              }}
+            >
+              {bgImages.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="landing-bg-slide"
+                  style={{ backgroundImage: `linear-gradient(130deg, rgba(9, 14, 30, 0.66), rgba(18, 23, 38, 0.62)), url(${img})` }}
+                />
+              ))}
+            </div>
             <div className="landing-hero">
               <p>오늘은 어떤 동화를 시작할까요?</p>
               <div className="landing-actions">
