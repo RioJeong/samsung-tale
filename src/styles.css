@@ -100,9 +100,8 @@ button {
 
 .landing-screen {
   background:
-    linear-gradient(130deg, rgba(24, 38, 71, 0.55), rgba(20, 54, 44, 0.62)),
-    url("https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2000&q=80")
-      center / cover;
+    linear-gradient(130deg, rgba(9, 14, 30, 0.66), rgba(18, 23, 38, 0.62)),
+    url("./assets/super-mario-galaxy-hero-16x9.jpg") center / cover;
   grid-template-rows: 1fr auto;
 }
 
@@ -110,6 +109,7 @@ button {
   display: grid;
   align-content: start;
   gap: 18px;
+  max-width: 760px;
 }
 
 .landing-hero p {
@@ -147,6 +147,19 @@ button {
   border-color: #fff;
   background: rgba(255, 255, 255, 0.13);
   box-shadow: 0 0 0 4px var(--focus);
+}
+
+.promo-badge {
+  min-height: 24px;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #152238;
+  background: #f5c84c;
 }
 
 .landing-rail {
@@ -191,6 +204,12 @@ button {
   font-weight: 700;
 }
 
+.mini-story.focused,
+.mini-story:hover {
+  box-shadow: 0 0 0 4px var(--focus);
+  border-color: #fff;
+}
+
 .library-screen {
   background:
     linear-gradient(180deg, rgba(11, 17, 28, 0.72), rgba(11, 17, 28, 0.95)),
@@ -226,6 +245,11 @@ button {
 
 .ghost-btn:hover {
   border-color: #fff;
+}
+
+.ghost-btn.focused {
+  border-color: #fff;
+  box-shadow: 0 0 0 4px var(--focus);
 }
 
 .library-grid {
@@ -266,9 +290,12 @@ button {
   font-weight: 700;
 }
 
-.library-card.focused,
-.library-card:hover {
+.library-card.focused {
   box-shadow: 0 0 0 4px var(--focus);
+}
+
+.library-card:hover {
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .create-screen {
@@ -656,25 +683,9 @@ button {
   border-color: #fff;
 }
 
-.summary-strip {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.summary-strip span {
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 10px;
-  border-radius: 8px;
-  border: 1px solid #4b566a;
-  background: #1b2029;
-  color: #d7e0f3;
-  font-size: 12px;
-  font-weight: 700;
+.icon-btn.focused {
+  border-color: #fff;
+  box-shadow: 0 0 0 4px var(--focus);
 }
 
 .cover-forest {
