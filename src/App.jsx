@@ -41,12 +41,12 @@ const backgrounds = [
 ];
 
 const morals = [
-  { id: "respect", label: "다름의 인정과 존중 (편견 깨기)" },
+  { id: "res", label: "다름의 인정과 존중 (편견 깨기)" },
   { id: "share", label: "나눔과 배려의 기쁨" },
-  { id: "res", label: "정직함과 책임감" },
+  { id: "resp", label: "정직함과 책임감" },
   { id: "npng", label: "포기하지 않는 끈기와 성실함" },
   { id: "friendship", label: "협동과 우정의 힘" },
-  { id: "self-res", label: "스스로를 사랑하는 마음 (자존감)" },
+  { id: "self-resp", label: "스스로를 사랑하는 마음 (자존감)" },
   { id: "cour", label: "두려움을 이겨내는 용기" },
   { id: "druid", label: "자연과 생명에 대한 사랑" },
 ];
@@ -113,7 +113,7 @@ const initialSelection = {
   voice: "mom",
   character: "lulu",
   background: "forest",
-  moral: "teamwork",
+  moral: "res",
   length: "p6"
 };
 
