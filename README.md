@@ -29,4 +29,4 @@ npm run preview
 
 ## 랜딩 페이지 이미지
 
-![랜딩 페이지](./landing-page.png)
+<img width="1294" height="735" alt="image" src="https://github.com/user-attachments/assets/39848b2e-15f2-43f2-8504-852a199fcf7d" />
