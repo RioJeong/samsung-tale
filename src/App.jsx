@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpen,
   Check,
@@ -41,10 +41,10 @@ const morals = [
 ];
 
 const lengths = [
-  { id: "short", label: "짧게 3분" },
-  { id: "normal", label: "보통 5분" },
-  { id: "long", label: "길게 8분" },
-  { id: "sleep", label: "잠자리 모드" }
+  { id: "p4", label: "4p" },
+  { id: "p6", label: "6p" },
+  { id: "p8", label: "8p" },
+  { id: "p10", label: "10p" }
 ];
 
 const libraryStories = [
@@ -55,7 +55,7 @@ const libraryStories = [
     background: "forest",
     character: "lulu",
     moral: "teamwork",
-    length: "normal",
+    length: "p6",
     voice: "mom"
   },
   {
@@ -65,7 +65,7 @@ const libraryStories = [
     background: "ocean",
     character: "popo",
     moral: "promise",
-    length: "short",
+    length: "p4",
     voice: "narrator"
   },
   {
@@ -75,7 +75,7 @@ const libraryStories = [
     background: "space",
     character: "mio",
     moral: "courage",
-    length: "long",
+    length: "p8",
     voice: "friend"
   }
 ];
@@ -99,7 +99,7 @@ const initialSelection = {
   character: "lulu",
   background: "forest",
   moral: "teamwork",
-  length: "normal"
+  length: "p6"
 };
 
 function pickLabel(options, id) {
@@ -126,7 +126,7 @@ function buildPlot(selection) {
     "끝에서는 친구들이 서로의 다름을 응원하며 손을 맞잡습니다."
   ];
   const ending = endings[Math.floor(Math.random() * endings.length)];
-  return `${character}는 ${background}에서 신비한 신호를 발견하고 ${moral}를 배우는 모험을 시작해요. ${voice}로 이야기가 진행되고, ${length} 분량으로 장면이 차분하게 확장됩니다. ${ending}`;
+  return `${character}는 ${background}에서 신비한 신호를 발견하고 ${moral}를 배우는 모험을 시작해요. ${voice}로 이야기가 진행되고, ${length} 구성으로 장면이 차분하게 확장됩니다. ${ending}`;
 }
 
 function buildLines(selection) {
@@ -150,13 +150,17 @@ function makeTitle(selection) {
 
 export default function App() {
   const [screen, setScreen] = useState("landing");
-  const [landingFocus, setLandingFocus] = useState(0);
+  const [landingActionFocus, setLandingActionFocus] = useState(0);
+  const [landingStoryFocus, setLandingStoryFocus] = useState(0);
+  const [landingZone, setLandingZone] = useState("actions");
   const [libraryFocus, setLibraryFocus] = useState(0);
+  const [libraryZone, setLibraryZone] = useState("cards");
   const [section, setSection] = useState("voice");
   const [storyField, setStoryField] = useState("background");
   const [confirmFocus, setConfirmFocus] = useState("ok");
   const [selection, setSelection] = useState(initialSelection);
   const [generatedPlot, setGeneratedPlot] = useState(buildPlot(initialSelection));
+  const historyRef = useRef([]);
   const [playback, setPlayback] = useState({
     title: makeTitle(initialSelection),
     background: initialSelection.background,
@@ -190,21 +194,44 @@ export default function App() {
       id: "read",
       label: "동화 읽기",
       icon: BookOpen,
-      action: () => setScreen("library")
+      action: () => openLibrary(0)
     },
     {
       id: "create",
       label: "동화 생성하기",
       icon: Sparkles,
-      action: () => {
-        setSection("voice");
-        setScreen("create");
-      }
+      action: () => openCreate()
     }
   ];
 
   function openLanding() {
     setScreen("landing");
+  }
+
+  function navigateTo(nextScreen) {
+    if (screen === nextScreen) {
+      return;
+    }
+    historyRef.current.push(screen);
+    setScreen(nextScreen);
+  }
+
+  function goBack() {
+    const prevScreen = historyRef.current.pop();
+    if (prevScreen) {
+      setScreen(prevScreen);
+    }
+  }
+
+  function openLibrary(index = 0) {
+    setLibraryFocus(index);
+    setLibraryZone("cards");
+    navigateTo("library");
+  }
+
+  function openCreate() {
+    setSection("voice");
+    navigateTo("create");
   }
 
   function setNextSection() {
@@ -217,7 +244,7 @@ export default function App() {
   function generatePreview() {
     setGeneratedPlot(buildPlot(selection));
     setConfirmFocus("ok");
-    setScreen("confirm");
+    navigateTo("confirm");
   }
 
   function startPlayerFromSelection() {
@@ -229,7 +256,7 @@ export default function App() {
       lineIndex: 0,
       playing: true
     });
-    setScreen("player");
+    navigateTo("player");
   }
 
   function startPlayerFromLibrary(index) {
@@ -242,7 +269,7 @@ export default function App() {
       lineIndex: 0,
       playing: true
     });
-    setScreen("player");
+    navigateTo("player");
   }
 
   function cycleSelection(field, options, direction) {
@@ -263,28 +290,88 @@ export default function App() {
       const key = event.key;
 
       if (screen === "landing") {
-        if (key === "ArrowLeft" || key === "ArrowUp") {
-          setLandingFocus((prev) => Math.max(0, prev - 1));
+        if (key === "ArrowLeft") {
+          if (landingZone === "actions") {
+            setLandingActionFocus((prev) => Math.max(0, prev - 1));
+          } else {
+            setLandingStoryFocus((prev) => Math.max(0, prev - 1));
+          }
           handled = true;
-        } else if (key === "ArrowRight" || key === "ArrowDown") {
-          setLandingFocus((prev) => Math.min(landingActions.length - 1, prev + 1));
+        } else if (key === "ArrowRight") {
+          if (landingZone === "actions") {
+            setLandingActionFocus((prev) =>
+              Math.min(landingActions.length - 1, prev + 1)
+            );
+          } else {
+            setLandingStoryFocus((prev) =>
+              Math.min(libraryStories.length - 1, prev + 1)
+            );
+          }
+          handled = true;
+        } else if (key === "ArrowDown") {
+          if (landingZone === "actions") {
+            setLandingZone("stories");
+            setLandingStoryFocus((prev) =>
+              Math.min(libraryStories.length - 1, Math.max(prev, landingActionFocus))
+            );
+          }
+          handled = true;
+        } else if (key === "ArrowUp") {
+          if (landingZone === "stories") {
+            setLandingZone("actions");
+            setLandingActionFocus((prev) =>
+              Math.min(landingActions.length - 1, Math.max(prev, landingStoryFocus))
+            );
+          }
           handled = true;
         } else if (key === "Enter") {
-          landingActions[landingFocus].action();
+          if (landingZone === "actions") {
+            landingActions[landingActionFocus].action();
+          } else {
+            startPlayerFromLibrary(landingStoryFocus);
+          }
           handled = true;
         }
       } else if (screen === "library") {
-        if (key === "ArrowLeft" || key === "ArrowUp") {
-          setLibraryFocus((prev) => Math.max(0, prev - 1));
+        if (key === "ArrowLeft") {
+          if (libraryZone === "cards") {
+            setLibraryFocus((prev) => Math.max(0, prev - 1));
+          }
           handled = true;
-        } else if (key === "ArrowRight" || key === "ArrowDown") {
-          setLibraryFocus((prev) => Math.min(libraryStories.length - 1, prev + 1));
+        } else if (key === "ArrowRight") {
+          if (libraryZone === "cards") {
+            setLibraryFocus((prev) => Math.min(libraryStories.length - 1, prev + 1));
+          }
+          handled = true;
+        } else if (key === "ArrowUp") {
+          if (libraryZone === "cards") {
+            setLibraryZone("create");
+          } else if (libraryZone === "create") {
+            setLibraryZone("home");
+          }
+          handled = true;
+        } else if (key === "ArrowDown") {
+          if (libraryZone === "home") {
+            setLibraryZone("create");
+          } else if (libraryZone === "create") {
+            setLibraryZone("cards");
+          }
           handled = true;
         } else if (key === "Enter") {
-          startPlayerFromLibrary(libraryFocus);
+          if (libraryZone === "cards") {
+            startPlayerFromLibrary(libraryFocus);
+          } else if (libraryZone === "create") {
+            openCreate();
+          } else {
+            openLanding();
+          }
           handled = true;
         } else if (key === "Escape" || key === "Backspace") {
-          openLanding();
+          if (key === "Backspace") {
+            goBack();
+          } else {
+            openLanding();
+          }
           handled = true;
         }
       } else if (screen === "create") {
@@ -297,7 +384,11 @@ export default function App() {
         };
 
         if (key === "Escape" || key === "Backspace") {
-          openLanding();
+          if (key === "Backspace") {
+            goBack();
+          } else {
+            openLanding();
+          }
           handled = true;
         } else if (key === "ArrowLeft") {
           if (section === "story" && storyFieldIndex > 0) {
@@ -332,7 +423,12 @@ export default function App() {
           handled = true;
         }
       } else if (screen === "confirm") {
-        if (key === "ArrowLeft" || key === "ArrowRight") {
+        if (
+          key === "ArrowLeft" ||
+          key === "ArrowRight" ||
+          key === "ArrowUp" ||
+          key === "ArrowDown"
+        ) {
           setConfirmFocus((prev) => (prev === "ok" ? "retry" : "ok"));
           handled = true;
         } else if (key === "Enter") {
@@ -343,7 +439,11 @@ export default function App() {
           }
           handled = true;
         } else if (key === "Escape" || key === "Backspace") {
-          setScreen("create");
+          if (key === "Backspace") {
+            goBack();
+          } else {
+            setScreen("create");
+          }
           handled = true;
         }
       } else if (screen === "player") {
@@ -363,7 +463,11 @@ export default function App() {
           }));
           handled = true;
         } else if (key === "Escape" || key === "Backspace") {
-          openLanding();
+          if (key === "Backspace") {
+            goBack();
+          } else {
+            openLanding();
+          }
           handled = true;
         }
       }
@@ -378,8 +482,11 @@ export default function App() {
   }, [
     confirmFocus,
     landingActions,
-    landingFocus,
+    landingActionFocus,
+    landingStoryFocus,
+    landingZone,
     libraryFocus,
+    libraryZone,
     screen,
     section,
     selection,
@@ -413,7 +520,19 @@ export default function App() {
         <div className="header-actions">
           <span className="screen-tag">{screenLabel[screen]}</span>
           {screen !== "landing" && (
-            <button className="icon-btn" type="button" onClick={openLanding} aria-label="홈">
+            <button
+              className={`icon-btn ${
+                screen === "library" && libraryZone === "home" ? "focused" : ""
+              }`}
+              type="button"
+              onFocus={() => {
+                if (screen === "library") {
+                  setLibraryZone("home");
+                }
+              }}
+              onClick={openLanding}
+              aria-label="홈"
+            >
               <House size={18} />
             </button>
           )}
@@ -431,10 +550,20 @@ export default function App() {
                   return (
                     <button
                       key={item.id}
-                      className={`landing-btn ${landingFocus === index ? "focused" : ""}`}
+                      className={`landing-btn ${
+                        landingZone === "actions" && landingActionFocus === index
+                          ? "focused"
+                          : ""
+                      }`}
                       type="button"
-                      onMouseEnter={() => setLandingFocus(index)}
-                      onFocus={() => setLandingFocus(index)}
+                      onMouseEnter={() => {
+                        setLandingZone("actions");
+                        setLandingActionFocus(index);
+                      }}
+                      onFocus={() => {
+                        setLandingZone("actions");
+                        setLandingActionFocus(index);
+                      }}
                       onClick={item.action}
                     >
                       <Icon size={20} />
@@ -450,9 +579,31 @@ export default function App() {
                 {libraryStories.map((story) => (
                   <button
                     key={story.id}
-                    className={`mini-story cover-${story.background}`}
+                    className={`mini-story cover-${story.background} ${
+                      landingZone === "stories" &&
+                      landingStoryFocus ===
+                        libraryStories.findIndex((item) => item.id === story.id)
+                        ? "focused"
+                        : ""
+                    }`}
                     type="button"
-                    onClick={() => setScreen("library")}
+                    onMouseEnter={() => {
+                      setLandingZone("stories");
+                      setLandingStoryFocus(
+                        libraryStories.findIndex((item) => item.id === story.id)
+                      );
+                    }}
+                    onFocus={() => {
+                      setLandingZone("stories");
+                      setLandingStoryFocus(
+                        libraryStories.findIndex((item) => item.id === story.id)
+                      );
+                    }}
+                    onClick={() => {
+                      startPlayerFromLibrary(
+                        libraryStories.findIndex((item) => item.id === story.id)
+                      );
+                    }}
                   >
                     <strong>{story.title}</strong>
                     <span>{story.progress}</span>
@@ -468,12 +619,14 @@ export default function App() {
             <div className="library-head">
               <h2>기존 동화</h2>
               <button
-                className="ghost-btn"
+                className={`ghost-btn ${
+                  screen === "library" && libraryZone === "create" ? "focused" : ""
+                }`}
                 type="button"
-                onClick={() => {
-                  setSection("voice");
-                  setScreen("create");
+                onFocus={() => {
+                  setLibraryZone("create");
                 }}
+                onClick={openCreate}
               >
                 <Sparkles size={16} />
                 <span>새 동화 만들기</span>
@@ -484,11 +637,13 @@ export default function App() {
                 <button
                   key={story.id}
                   className={`library-card cover-${story.background} ${
-                    libraryFocus === index ? "focused" : ""
+                    libraryZone === "cards" && libraryFocus === index ? "focused" : ""
                   }`}
                   type="button"
-                  onMouseEnter={() => setLibraryFocus(index)}
-                  onFocus={() => setLibraryFocus(index)}
+                  onFocus={() => {
+                    setLibraryZone("cards");
+                    setLibraryFocus(index);
+                  }}
                   onClick={() => startPlayerFromLibrary(index)}
                 >
                   <div className="library-card-copy">
@@ -707,11 +862,6 @@ export default function App() {
         )}
       </main>
 
-      <footer className="summary-strip">
-        {summary.map((item) => (
-          <span key={item}>{item}</span>
-        ))}
-      </footer>
     </div>
   );
 }
