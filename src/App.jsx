@@ -41,10 +41,14 @@ const backgrounds = [
 ];
 
 const morals = [
-  { id: "courage", label: "용기 내기" },
-  { id: "teamwork", label: "친구와 협동" },
-  { id: "promise", label: "약속 지키기" },
-  { id: "respect", label: "다름을 존중하기" }
+  { id: "courage", label: "다름의 인정과 존중 (편견 깨기)" },
+  { id: "teamwork", label: "나눔과 배려의 기쁨" },
+  { id: "promise", label: "정직함과 책임감" },
+  { id: "respect", label: "포기하지 않는 끈기와 성실함" },
+  { id: "courage", label: "협동과 우정의 힘" },
+  { id: "teamwork", label: "스스로를 사랑하는 마음 (자존감)" },
+  { id: "promise", label: "두려움을 이겨내는 용기" },
+  { id: "respect", label: "자연과 생명에 대한 사랑" },
 ];
 
 const lengths = [
