@@ -31,8 +31,50 @@ import yoshiThumb from "./assets/characters/yoshi.png";
 const carrotSceneAssets = [storyScene1, storyScene2, storyScene3, storyScene4];
 const carrotVideoAssets = [storyVideo1, storyVideo2, storyVideo3, storyVideo4];
 
-const sectionOrder = ["character", "story"];
+const sectionOrder = ["character", "style", "story"];
 const storyFieldOrder = ["background", "moral", "length"];
+
+const styles = [
+  {
+    id: "kids",
+    label: "기본 어린이 스타일",
+    tagline: "친숙하고 따뜻한 동화 일러스트",
+    description:
+      "동화책에서 자주 보는 부드러운 색감과 둥근 선의 일러스트 스타일. 어떤 이야기에도 잘 어울리는 기본값입니다.",
+    swatch: "linear-gradient(135deg, #ffd6a5, #fdffb6 50%, #caffbf 75%, #9bf6ff)",
+    locked: false
+  },
+  {
+    id: "cartoon",
+    label: "귀여운 카툰",
+    tagline: "밝고 발랄한 색감",
+    description:
+      "선이 또렷하고 표정이 풍부한 카툰 스타일. 활기찬 모험 이야기에 잘 어울려요.",
+    swatch: "linear-gradient(135deg, #ff6b9d, #ffd93d 55%, #6bcfff)",
+    locked: false
+  },
+  {
+    id: "pixel",
+    label: "픽셀 아트",
+    tagline: "레트로 게임 감성",
+    description:
+      "도트 한 점 한 점이 살아있는 8비트 게임 풍 그림. 모험과 퀘스트 분위기에 어울려요.",
+    swatch:
+      "repeating-linear-gradient(45deg, #2d3047 0 8px, #419d78 8px 16px, #e0a458 16px 24px, #fff3b0 24px 32px)",
+    locked: false
+  },
+  {
+    id: "baekheena",
+    label: "백희나 풍 인형 동화",
+    tagline: "손으로 빚은 인형의 입체 동화",
+    description:
+      "찰흙·천·종이로 만든 인형과 미니어처 무대를 사진으로 담아내는 따뜻한 입체 동화 스타일. 손맛이 살아있는 질감과 포근한 조명이 매력적입니다.",
+    swatch:
+      "radial-gradient(circle at 70% 25%, #fff4dd 0 22%, transparent 55%), linear-gradient(135deg, #d8a373 0%, #e9c46a 35%, #c98056 70%, #f5e6d3 100%)",
+    locked: true,
+    premium: true
+  }
+];
 
 const characters = [
   {
@@ -152,6 +194,7 @@ const fieldLabel = {
 
 const initialSelection = {
   character: "lulu",
+  style: "kids",
   background: "forest",
   moral: "res",
   length: "p6"
@@ -171,6 +214,7 @@ function cycleId(options, currentId, direction) {
 
 function buildPlot(selection) {
   const character = pickLabel(characters, selection.character);
+  const style = pickLabel(styles, selection.style);
   const background = pickLabel(backgrounds, selection.background);
   const moral = pickLabel(morals, selection.moral);
   const length = pickLabel(lengths, selection.length);
@@ -180,7 +224,7 @@ function buildPlot(selection) {
     "끝에서는 친구들이 서로의 다름을 응원하며 손을 맞잡습니다."
   ];
   const ending = endings[Math.floor(Math.random() * endings.length)];
-  return `${character}는 ${background}에서 신비한 신호를 발견하고 ${moral}를 배우는 모험을 시작해요. ${length} 구성으로 장면이 차분하게 확장됩니다. ${ending}`;
+  return `${character}는 ${background}에서 신비한 신호를 발견하고 ${moral}를 배우는 모험을 시작해요. ${style} 화풍으로 ${length} 구성의 장면이 차분하게 확장됩니다. ${ending}`;
 }
 
 function buildLines(selection) {
@@ -223,7 +267,9 @@ export default function App() {
   const [storyField, setStoryField] = useState("background");
   const [focusedCharacter, setFocusedCharacter] = useState(initialSelection.character);
   const [characterFocusZone, setCharacterFocusZone] = useState("grid");
-  const [proConfirm, setProConfirm] = useState({ open: false, character: null });
+  const [focusedStyle, setFocusedStyle] = useState(initialSelection.style);
+  const [styleFocusZone, setStyleFocusZone] = useState("grid");
+  const [proConfirm, setProConfirm] = useState({ open: false, item: null, field: null });
   const [proConfirmFocus, setProConfirmFocus] = useState("yes");
   const [confirmFocus, setConfirmFocus] = useState("ok");
   const [selection, setSelection] = useState(initialSelection);
@@ -253,6 +299,7 @@ export default function App() {
   const summary = useMemo(
     () => [
       `캐릭터: ${pickLabel(characters, selection.character)}`,
+      `화풍: ${pickLabel(styles, selection.style)}`,
       `배경: ${pickLabel(backgrounds, selection.background)}`,
       `교훈: ${pickLabel(morals, selection.moral)}`,
       `길이: ${pickLabel(lengths, selection.length)}`
@@ -262,6 +309,9 @@ export default function App() {
 
   const focusedChar =
     characters.find((char) => char.id === focusedCharacter) || characters[0];
+
+  const focusedStyleItem =
+    styles.find((style) => style.id === focusedStyle) || styles[0];
 
   const progressPercent =
     playback.lines.length > 0
@@ -338,39 +388,51 @@ export default function App() {
   function openCreate() {
     setSection("character");
     setFocusedCharacter(selection.character);
+    setFocusedStyle(selection.style);
     setCharacterFocusZone("grid");
+    setStyleFocusZone("grid");
     navigateTo("create");
   }
 
   function pickCharacter(char) {
     setFocusedCharacter(char.id);
     if (char.locked) {
-      setProConfirm({ open: true, character: char });
+      setProConfirm({ open: true, item: char, field: "character" });
       setProConfirmFocus("yes");
       return;
     }
     setSelection((prev) => ({ ...prev, character: char.id }));
   }
 
-  function confirmProPurchase() {
-    const char = proConfirm.character;
-    if (char) {
-      setSelection((prev) => ({ ...prev, character: char.id }));
+  function pickStyle(style) {
+    setFocusedStyle(style.id);
+    if (style.locked) {
+      setProConfirm({ open: true, item: style, field: "style" });
+      setProConfirmFocus("yes");
+      return;
     }
-    setProConfirm({ open: false, character: null });
+    setSelection((prev) => ({ ...prev, style: style.id }));
+  }
+
+  function confirmProPurchase() {
+    const { item, field } = proConfirm;
+    if (item && field) {
+      setSelection((prev) => ({ ...prev, [field]: item.id }));
+    }
+    setProConfirm({ open: false, item: null, field: null });
   }
 
   function cancelProPurchase() {
-    setProConfirm({ open: false, character: null });
+    setProConfirm({ open: false, item: null, field: null });
   }
 
-  function moveCharacterFocus(direction) {
+  function moveGridFocus(items, currentId, setFocus, direction) {
     const cols = 4;
-    const idx = characters.findIndex((c) => c.id === focusedCharacter);
+    const idx = items.findIndex((i) => i.id === currentId);
     const safeIdx = idx === -1 ? 0 : idx;
     const row = Math.floor(safeIdx / cols);
     const col = safeIdx % cols;
-    const lastRow = Math.floor((characters.length - 1) / cols);
+    const lastRow = Math.floor((items.length - 1) / cols);
 
     let nextRow = row;
     let nextCol = col;
@@ -379,8 +441,16 @@ export default function App() {
     else if (direction === "up") nextRow = Math.max(0, row - 1);
     else if (direction === "down") nextRow = Math.min(lastRow, row + 1);
 
-    const nextIdx = Math.min(characters.length - 1, nextRow * cols + nextCol);
-    setFocusedCharacter(characters[nextIdx].id);
+    const nextIdx = Math.min(items.length - 1, nextRow * cols + nextCol);
+    setFocus(items[nextIdx].id);
+  }
+
+  function moveCharacterFocus(direction) {
+    moveGridFocus(characters, focusedCharacter, setFocusedCharacter, direction);
+  }
+
+  function moveStyleFocus(direction) {
+    moveGridFocus(styles, focusedStyle, setFocusedStyle, direction);
   }
 
   function setNextSection() {
@@ -726,6 +796,10 @@ export default function App() {
             if (characterFocusZone === "grid") {
               moveCharacterFocus("left");
             }
+          } else if (section === "style") {
+            if (styleFocusZone === "grid") {
+              moveStyleFocus("left");
+            }
           } else if (section === "story" && storyFieldIndex > 0) {
             setStoryField(storyFieldOrder[storyFieldIndex - 1]);
           } else if (sectionIndex > 0) {
@@ -736,6 +810,10 @@ export default function App() {
           if (section === "character") {
             if (characterFocusZone === "grid") {
               moveCharacterFocus("right");
+            }
+          } else if (section === "style") {
+            if (styleFocusZone === "grid") {
+              moveStyleFocus("right");
             }
           } else if (section === "story" && storyFieldIndex < storyFieldOrder.length - 1) {
             setStoryField(storyFieldOrder[storyFieldIndex + 1]);
@@ -765,6 +843,27 @@ export default function App() {
                 moveCharacterFocus("up");
               }
             }
+          } else if (section === "style") {
+            if (key === "ArrowDown") {
+              if (styleFocusZone === "grid") {
+                const cols = 4;
+                const idx = styles.findIndex((s) => s.id === focusedStyle);
+                const safeIdx = idx === -1 ? 0 : idx;
+                const row = Math.floor(safeIdx / cols);
+                const lastRow = Math.floor((styles.length - 1) / cols);
+                if (row === lastRow) {
+                  setStyleFocusZone("footer");
+                } else {
+                  moveStyleFocus("down");
+                }
+              }
+            } else {
+              if (styleFocusZone === "footer") {
+                setStyleFocusZone("grid");
+              } else {
+                moveStyleFocus("up");
+              }
+            }
           } else {
             const direction = key === "ArrowDown" ? 1 : -1;
             cycleSelection(storyField, storyOptions[storyField], direction);
@@ -776,6 +875,12 @@ export default function App() {
               setNextSection();
             } else {
               pickCharacter(focusedChar);
+            }
+          } else if (section === "style") {
+            if (styleFocusZone === "footer") {
+              setNextSection();
+            } else {
+              pickStyle(focusedStyleItem);
             }
           } else if (section === "story") {
             generatePreview();
@@ -877,8 +982,11 @@ export default function App() {
     libraryFocus,
     libraryZone,
     proConfirm.open,
-    proConfirm.character,
+    proConfirm.item,
+    proConfirm.field,
     proConfirmFocus,
+    focusedStyle,
+    styleFocusZone,
     screen,
     section,
     selection,
@@ -1163,6 +1271,13 @@ export default function App() {
                 </button>
                 <button
                   type="button"
+                  className={section === "style" ? "active" : ""}
+                  onClick={() => setSection("style")}
+                >
+                  화풍
+                </button>
+                <button
+                  type="button"
                   className={section === "story" ? "active" : ""}
                   onClick={() => setSection("story")}
                 >
@@ -1255,6 +1370,69 @@ export default function App() {
                   </div>
                 )}
 
+                {section === "style" && (
+                  <div className="character-screen">
+                    <div className="character-grid style-grid">
+                      {styles.map((style) => {
+                        const isSelected = selection.style === style.id;
+                        const isFocused = focusedStyle === style.id;
+                        const classes = [
+                          "character-card style-card",
+                          isSelected ? "selected" : "",
+                          isFocused ? "focused" : "",
+                          style.locked ? "locked" : ""
+                        ]
+                          .filter(Boolean)
+                          .join(" ");
+                        return (
+                          <button
+                            key={style.id}
+                            type="button"
+                            className={classes}
+                            onMouseEnter={() => {
+                              setFocusedStyle(style.id);
+                              setStyleFocusZone("grid");
+                            }}
+                            onFocus={() => {
+                              setFocusedStyle(style.id);
+                              setStyleFocusZone("grid");
+                            }}
+                            onClick={() => pickStyle(style)}
+                          >
+                            {style.locked && (
+                              <span className="lock-badge">
+                                <Lock size={12} />
+                                <span>PRO</span>
+                              </span>
+                            )}
+                            <div
+                              className="style-swatch"
+                              style={{ backgroundImage: style.swatch }}
+                            />
+                            <span className="character-card-name">{style.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <aside className="character-detail">
+                      {focusedStyleItem.locked && (
+                        <div key={focusedStyleItem.id} className="lock-banner">
+                          <Lock size={14} />
+                          <span>프리미엄 화풍 — 사용 시 20포인트 차감</span>
+                        </div>
+                      )}
+                      <h3 className="character-detail-name">{focusedStyleItem.label}</h3>
+                      <p className="character-detail-tagline">"{focusedStyleItem.tagline}"</p>
+                      <div
+                        className="style-preview"
+                        style={{ backgroundImage: focusedStyleItem.swatch }}
+                      />
+                      <p className="character-detail-desc">{focusedStyleItem.description}</p>
+                    </aside>
+                  </div>
+                )}
+
                 {section === "story" && (
                   <div className="story-columns">
                     {storyFieldOrder.map((field) => {
@@ -1309,11 +1487,15 @@ export default function App() {
               {section !== "story" ? (
                 <button
                   className={`primary-btn ${
-                    section === "character" && characterFocusZone === "footer" ? "focused" : ""
+                    (section === "character" && characterFocusZone === "footer") ||
+                    (section === "style" && styleFocusZone === "footer")
+                      ? "focused"
+                      : ""
                   }`}
                   type="button"
                   onMouseEnter={() => {
                     if (section === "character") setCharacterFocusZone("footer");
+                    if (section === "style") setStyleFocusZone("footer");
                   }}
                   onClick={setNextSection}
                 >
@@ -1457,7 +1639,7 @@ export default function App() {
           <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
             <p className="modal-title">
               <Lock size={14} />
-              <span>{proConfirm.character?.label}</span>
+              <span>{proConfirm.item?.label}</span>
             </p>
             <p className="modal-message">20포인트가 차감됩니다. 사용할까요?</p>
             <div className="modal-actions">
